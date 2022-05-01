@@ -33,7 +33,7 @@
 					conn.setAutoCommit(true);
 				}
 				
-				if (action != null && action.equals("update")) {
+				if (action != null && action.equals("update-faculty")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement(("UPDATE faculty SET first_name = ?, middle_name = ?, last_name = ?, title = ? WHERE faculty_id = ?;"));
 					
@@ -86,7 +86,7 @@
 					<%--Update Code--%>
 					<tr>
 						<form action="faculty.jsp" method="get">
-							<input type="hidden" value="update" name="action">
+							<input type="hidden" value="update-faculty" name="action">
 							<th><input value="" name="FACULTY_ID" size="10"></th>
 							<th><input value="" name="FIRST_NAME" size="10"></th>
 							<th><input value="" name="MIDDLE_NAME" size="10"></th>
