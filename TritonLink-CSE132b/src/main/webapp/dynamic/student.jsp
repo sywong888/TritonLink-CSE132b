@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Faculty home page</title>
+<title>Student home page</title>
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
@@ -13,8 +13,10 @@
 			<td>
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
+				
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
