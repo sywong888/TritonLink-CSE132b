@@ -68,7 +68,7 @@
 				// insert prerequisites
 				if (action != null && action.equals("insert-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO prerequisites VALUES (?, ?)");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO prerequisite VALUES (?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
@@ -82,7 +82,7 @@
 				// update prerequisites
 				if (action != null && action.equals("update-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE prerequisites SET prereq_id = ? WHERE course_id = ? AND prereq_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE prerequisite SET prereq_id = ? WHERE course_id = ? AND prereq_id = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("NEW_PREREQ_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
@@ -97,7 +97,7 @@
 				// delete prerequisites
 				if (action != null && action.equals("delete-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM prerequisites WHERE course_id = ? AND prereq_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM prerequisite WHERE course_id = ? AND prereq_id = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
