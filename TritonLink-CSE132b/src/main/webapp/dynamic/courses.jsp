@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
@@ -64,9 +64,53 @@
 					conn.commit();
 					conn.setAutoCommit(true);
 				}
+				
+				// insert prerequisites
+				if (action != null && action.equals("insert-prereq")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO prerequisites VALUES (?, ?)");
+					
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// update prerequisites
+				if (action != null && action.equals("update-prereq")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE prerequisites SET prereq_id = ? WHERE course_id = ? AND prereq_id = ?;");
+					
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("NEW_PREREQ_ID")));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("OLD_PREREQ_ID")));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// delete prerequisites
+				if (action != null && action.equals("delete-prereq")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM prerequisites WHERE course_id = ? AND prereq_id = ?;");
+					
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
 				%>
 
 				<%--Presentation Code--%>
+				<h3>Courses Form</h3>
 				<table>
 					<tr>
 						<th>Course Id</th>
@@ -76,7 +120,7 @@
 						<th>Grading Method</th>
 						<th>Possible Units</th>
 					</tr>
-					<%--Insert Code--%>
+					<%--Insert courses Code--%>
 					<tr>
 						<form action="courses.jsp" method="get">
 							<input type="hidden" value="insert" name="action">
@@ -89,7 +133,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
-					<%--Update Code--%>
+					<%--Update courses Code--%>
 					<tr>
 						<form action="courses.jsp" method="get">
 							<input type="hidden" value="update" name="action">
@@ -102,7 +146,7 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
-					<%--Delete Code--%>
+					<%--Delete courses Code--%>
 					<tr>
 						<form action="courses.jsp" method="get">
 							<input type="hidden" value="delete" name="action">
@@ -115,6 +159,48 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+				</table>
+
+				<h3>Prerequisites Form</h3>
+				<table>
+					<tr>
+						<th>Course ID</th>
+						<th>Prerequisite ID</th>
+					</tr>
+					<%--Insert prerequisites Code--%>
+					<tr>
+						<form action="courses.jsp" method="get">
+							<input type="hidden" value="insert-prereq" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="PREREQ_ID" size="10"></th>
+							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+					<%--Delete prerequisites Code--%>
+					<tr>
+						<form action="courses.jsp" method="get">
+							<input type="hidden" value="delete-prereq" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="PREREQ_ID" size="10"></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					<tr>
+						<th>Course ID</th>
+						<th>Old Prerequisite ID</th>
+						<th>New Prerequisite ID</th>
+					</tr>
+					<%--Update prerequisites Code--%>
+					<tr>
+						<form action="courses.jsp" method="get">
+							<input type="hidden" value="update-prereq" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="OLD_PREREQ_ID" size="10"></th>
+							<th><input value="" name="NEW_PREREQ_ID" size="10"></th>
+							<th><input type="submit" value="Update"></th>
+						</form>
+					</tr>
+					
 				</table>
 			</td>
 		</tr>	

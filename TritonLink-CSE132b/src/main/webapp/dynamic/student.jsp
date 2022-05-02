@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Student home page</title>
+<title>Faculty home page</title>
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
@@ -13,10 +13,8 @@
 			<td>
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
-				
 
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
 				
 				String action = request.getParameter("action");
 				
@@ -25,16 +23,17 @@
 					conn.setAutoCommit(false);
 					
 					// pstmt for student table
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO student VALUES (?, ?, ?, ?, ?, ?, ?, ?);"));
+					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO student VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"));
 			
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.setString(2, request.getParameter("FIRST_NAME"));
 					pstmt.setString(3, request.getParameter("MIDDLE_NAME"));
 					pstmt.setString(4, request.getParameter("LAST_NAME"));
 					pstmt.setString(5, request.getParameter("STUDENT_ID"));
-					pstmt.setString(6, request.getParameter("RESIDENT_TYPE"));
-					pstmt.setInt(7, Integer.parseInt(request.getParameter("DNO")));
-					pstmt.setString(8, request.getParameter("ENROLLED"));
+					pstmt.setString(6, request.getParameter("STUDENT_TYPE"));
+					pstmt.setString(7, request.getParameter("RESIDENT_TYPE"));
+					pstmt.setInt(8, Integer.parseInt(request.getParameter("DNO")));
+					pstmt.setString(9, request.getParameter("ENROLLED"));
 					
 					pstmt.executeUpdate();
 					
@@ -52,6 +51,15 @@
 					
 					pstmt.executeUpdate();
 					
+					// pstmt for bsms table
+					String bsms = request.getParameter("BSMS");
+					
+ 					if (bsms.equals("y")) {
+						pstmt = conn.prepareStatement("INSERT INTO bsms (ssn) VALUES (?);");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+ 					
 					conn.commit();
 					conn.setAutoCommit(true);
 				}
@@ -59,18 +67,36 @@
 				// update student
 				if (action != null && action.equals("update-student")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE student SET first_name = ?, middle_name = ?, last_name = ?, student_id = ?, resident_type = ?, dno = ?, enrolled = ? WHERE ssn = ?;"));
-					
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE student SET first_name = ?, middle_name = ?, last_name = ?, student_id = ?, student_type = ?, resident_type = ?, dno = ?, enrolled = ? WHERE ssn = ?;");
 					pstmt.setString(1, request.getParameter("FIRST_NAME"));
-					pstmt.setString(2, request.getParameter("MIDDLE_NAME"));
+ 					pstmt.setString(2, request.getParameter("MIDDLE_NAME"));
 					pstmt.setString(3, request.getParameter("LAST_NAME"));
 					pstmt.setString(4, request.getParameter("STUDENT_ID"));
-					pstmt.setString(5, request.getParameter("RESIDENT_TYPE"));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("DNO")));
-					pstmt.setString(7, request.getParameter("ENROLLED"));
-					pstmt.setString(8, request.getParameter("SSN"));
+					pstmt.setString(5, request.getParameter("STUDENT_TYPE"));
+					pstmt.setString(6, request.getParameter("RESIDENT_TYPE"));
+					pstmt.setInt(7, Integer.parseInt(request.getParameter("DNO")));
+					pstmt.setString(8, request.getParameter("ENROLLED"));
+					pstmt.setString(9, request.getParameter("SSN"));
 					
 					pstmt.executeUpdate();
+										
+					// update bsms if necessary
+ 					pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM bsms WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					ResultSet rset = pstmt.executeQuery();
+					rset.next();
+					
+					String bsms = request.getParameter("BSMS");
+					if (rset.getInt("count") == 0 && bsms.equals("y")) {
+						pstmt = conn.prepareStatement("INSERT INTO bsms (ssn) VALUES (?);");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					} else if (rset.getInt("count") == 1 && bsms.equals("n")) {
+						pstmt = conn.prepareStatement("DELETE FROM bsms WHERE ssn = ?;");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+					rset.close();
 					
 					conn.commit();
 					conn.setAutoCommit(true);
@@ -79,26 +105,102 @@
 				// delete student
 				if (action != null && action.equals("delete-student")) {
 					conn.setAutoCommit(false);
-					
+										
 					// delete from student type specific tables to avoid foreign key violations
-					String studentType = request.getParameter("STUDENT_TYPE");
-					
-					PreparedStatement pstmt = conn.prepareStatement("");
-					
- 					if (studentType.equals("undergraduate")) {
-						pstmt = conn.prepareStatement(("DELETE FROM undergraduate WHERE SSN = ?;"));
-					} else if (studentType.equals("masters")) {
-						pstmt = conn.prepareStatement(("DELETE FROM masters WHERE SSN = ?;"));
-					} else {
-						pstmt = conn.prepareStatement(("DELETE FROM phd WHERE SSN = ?;"));
-					}
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM undergraduate WHERE SSN = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+ 					pstmt = conn.prepareStatement("DELETE FROM masters WHERE SSN = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					pstmt = conn.prepareStatement("DELETE FROM phd WHERE SSN = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					pstmt = conn.prepareStatement("DELETE FROM bsms WHERE SSN = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					 					
+ 					// delete from periods_of_enrollment to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM periods_of_enrollment WHERE ssn = ?;");
  					pstmt.setString(1, request.getParameter("SSN"));
- 					
  					pstmt.executeUpdate();
  					
- 					// then delete from student table
+ 					// delete from on_probation to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM on_probation WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					 					
+ 					// delete from student table
 					pstmt = conn.prepareStatement(("DELETE FROM student WHERE ssn = ?;"));
 					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+										
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// insert periods_of_enrollment
+				if (action != null && action.equals("insert-periods")) {
+					conn.setAutoCommit(false);
+					
+					// pstmt for student table
+					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO periods_of_enrollment VALUES (?, ?, ?);"));
+			
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.setString(2, request.getParameter("PERIOD_START"));
+					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// update start of periods_of_enrollment
+				if (action != null && action.equals("update-periods-start")) {
+					conn.setAutoCommit(false);
+					
+					// pstmt for student table
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE periods_of_enrollment SET period_start = ? WHERE ssn = ? AND period_end = ?;"));
+			
+					pstmt.setString(1, request.getParameter("PERIOD_START"));
+					pstmt.setString(2, request.getParameter("SSN"));
+					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// update end of periods_of_enrollment
+				if (action != null && action.equals("update-periods-end")) {
+					conn.setAutoCommit(false);
+					
+					// pstmt for student table
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE periods_of_enrollment SET period_end = ? WHERE ssn = ? AND period_start = ?;"));
+			
+					pstmt.setString(1, request.getParameter("PERIOD_END"));
+					pstmt.setString(2, request.getParameter("SSN"));
+					pstmt.setString(3, request.getParameter("PERIOD_START"));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// delete periods_of_enrollment
+				if (action != null && action.equals("delete-periods")) {
+					conn.setAutoCommit(false);
+					
+					// pstmt for student table
+					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM periods_of_enrollment WHERE ssn = ? AND period_start = ? AND period_end = ?;"));
+			
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.setString(2, request.getParameter("PERIOD_START"));
+					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -224,6 +326,7 @@
 						<th>Last Name</th>
 						<th>Student ID</th>
 						<th>Type</th>
+						<th>BS/MS</th>
 						<th>Resident Type</th>
 						<th>Department Number</th>
 						<th>Enrolled</th>
@@ -242,6 +345,10 @@
 								<option value="undergraduate">Undergraduate</option>
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
+							</select></th>
+							<th><select name="BSMS">
+								<option value="y">Yes</option>
+								<option value="n">No</option>
 							</select></th>
 							<th><select name="RESIDENT_TYPE">
 								<option value="California">California Resident</option>
@@ -271,6 +378,10 @@
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
 							</select></th>
+							<th><select name="BSMS">
+								<option value="y">Yes</option>
+								<option value="n">No</option>
+							</select></th>
 							<th><select name="RESIDENT_TYPE">
 								<option value="California">California Resident</option>
 								<option value="foreign">Foreign Student</option>
@@ -299,6 +410,10 @@
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
 							</select></th>
+							<th><select name="BSMS">
+								<option value="y">Yes</option>
+								<option value="n">No</option>
+							</select></th>
 							<th><select name="RESIDENT_TYPE">
 								<option value="California">California Resident</option>
 								<option value="foreign">Foreign Student</option>
@@ -309,6 +424,60 @@
 								<option value="y">Yes</option>
 								<option value="n">No</option>
 							</select></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+				</table>
+				
+				<%--periods_of_enrollment table--%>
+				<h3>Periods of Enrollment Form</h3>
+				<table>
+					<tr>
+						<th>SSN</th>
+						<th>Start</th>
+						<th>End</th>
+					</tr>
+					
+					<%--Insert periods_of_enrollment Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="insert-periods" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="PERIOD_START" size="10"></th>
+							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+					
+					<%--Update start of periods_of_enrollment Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="update-periods-start" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="PERIOD_START" size="10"></th>
+							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><input type="submit" value="Update Start"></th>
+						</form>
+					</tr>
+					
+					<%--Update end of periods_of_enrollment Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="update-periods-end" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="PERIOD_START" size="10"></th>
+							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><input type="submit" value="Update End"></th>
+						</form>
+					</tr>
+				
+					<%--Delete periods_of_enrollment Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="delete-periods" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="PERIOD_START" size="10"></th>
+							<th><input value="" name="PERIOD_END" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
@@ -364,7 +533,7 @@
 						</form>
 					</tr>
 				</table>
-				
+					
 				<%--phd table--%>
 				<h3>PhD Form</h3>
 				<table>
