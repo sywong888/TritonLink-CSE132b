@@ -14,7 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
@@ -56,7 +57,7 @@
 					conn.setAutoCommit(true);
 				}
 				
-				conn.close();
+				// conn.close();
 				%>
 
 				<%--Presentation Code--%>
@@ -99,6 +100,29 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all departments-->
+					<tr>
+						<th>Department Number</th>
+						<th>Department Name</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM department;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("dno") %></td>
+							<td><%= rset.getString("dname") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					conn.close();
+					%>					
+					
 				</table>
 			</td>
 		</tr>	

@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				
@@ -124,6 +124,38 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all enrollments in course -->
+					<tr>
+						<th>SSN</th>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Units Taken</th>
+						<th>Status</th>
+						<th></th>
+						<th></th>
+						<th></th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM enroll;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("ssn") %></td>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("units_taken") %></td>
+							<td><%= rset.getString("status") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					conn.close();
+					%>					
+					
 				</table>
 			</td>
 		</tr>	

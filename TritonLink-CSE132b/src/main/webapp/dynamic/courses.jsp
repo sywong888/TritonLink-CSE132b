@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
@@ -113,7 +113,7 @@
 				<h3>Courses Form</h3>
 				<table>
 					<tr>
-						<th>Course Id</th>
+						<th>Course ID</th>
 						<th>Department Number</th>
 						<th>Current Number</th>
 						<th>Old Number</th>
@@ -159,6 +159,37 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all companies that sponsor student organizations-->
+					<tr>
+						<th>Course Id</th>
+						<th>Department Number</th>
+						<th>Current Number</th>
+						<th>Old Number</th>
+						<th>Grading Method</th>
+						<th>Possible Units</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM courses;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("dno") %></td>
+							<td><%= rset.getString("current_number") %></td>
+							<td><%= rset.getString("old_number") %></td>
+							<td><%= rset.getString("grading_method") %></td>
+							<td><%= rset.getString("possible_units") %></td>
+							
+						</tr>
+					<%
+					}
+					rset.close();
+					%>						
+					
 				</table>
 
 				<h3>Prerequisites Form</h3>
@@ -200,6 +231,29 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all companies that sponsor student organizations-->
+					<tr>
+						<th>Course ID</th>
+						<th>Prerequisite ID</th>
+					</tr>
+					
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM prerequisites;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("prereq_id") %></td>							
+						</tr>
+					<%
+					}
+					rset.close();
+					conn.close();
+					%>					
+					
 					
 				</table>
 			</td>

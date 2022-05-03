@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				
@@ -254,6 +254,37 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all classes -->
+					<tr>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Instructor ID</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Enrollment Limit</th>
+						<th>Title</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM classes;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("instructor_id") %></td>
+							<td><%= rset.getString("quarter") %></td>
+							<td><%= rset.getString("year") %></td>
+							<td><%= rset.getString("enrollment_limit") %></td>
+							<td><%= rset.getString("title") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 
 				<h3>Meeting Form</h3>
@@ -349,6 +380,43 @@
 							</select></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
+						
+					<!-- Reading in all classes -->
+					<tr>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Day</th>
+						<th>Time</th>
+						<th>Room</th>
+						<th>Type</th>
+						<th>Mandatory</th>
+					</tr>
+					
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM meeting;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("quarter") %></td>
+							<td><%= rset.getString("year") %></td>
+							<td><%= rset.getString("day") %></td>
+							<td><%= rset.getString("time") %></td>
+							<td><%= rset.getString("room") %></td>
+							<td><%= rset.getString("type") %></td>
+							<td><%= rset.getString("mandatory") %></td>
+							
+						</tr>
+					<%
+					}
+					rset.close();
+					%>						
+						
 					</tr>
 				</table>
 				
@@ -396,6 +464,36 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all reviews -->
+					<tr>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Date</th>
+						<th>Time</th>
+					</tr>
+					
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM review_session;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("quarter") %></td>
+							<td><%= rset.getString("year") %></td>
+							<td><%= rset.getString("date") %></td>
+							<td><%= rset.getString("time") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>					
+					
 				</table>
 			</td>
 		</tr>	

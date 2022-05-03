@@ -60,7 +60,7 @@
 					conn.setAutoCommit(true);
 				}
 				
-				conn.close();
+				// conn.close();
 				%>
 
 				<%--Presentation Code--%>
@@ -104,6 +104,30 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all student participation in student organizations-->
+					<tr>
+						<th>Organization ID</th>
+						<th>Student SSN</th>
+						<th>Position</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM student_organization_participation;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("org_id") %></td>
+							<td><%= rset.getString("ssn") %></td>
+							<td><%= rset.getString("position") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					conn.close();
+					%>
 				</table>
 			</td>
 		</tr>	

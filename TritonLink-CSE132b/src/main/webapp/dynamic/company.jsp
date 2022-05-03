@@ -57,7 +57,7 @@
 					conn.setAutoCommit(true);
 				}
 				
-				conn.close();
+				// conn.close();
 				%>
 
 				<%--Presentation Code--%>
@@ -97,6 +97,31 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					
+					<!-- Reading in all companies that sponsor student organizations-->
+					<tr>
+						<th>Company Name</th>
+						<th>Student Organization ID</th>
+						<th>Company Donation Amount</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM company;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("name") %></td>
+							<td><%= rset.getString("org_id") %></td>
+							<td><%= rset.getString("donation_amount") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					conn.close();
+					%>
 				</table>
 			</td>
 		</tr>	

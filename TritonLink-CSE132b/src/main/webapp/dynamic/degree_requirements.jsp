@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 			
@@ -189,6 +189,34 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all UCSD degrees-->
+					<tr>
+						<th>Degree Type</th>
+						<th>Department Number</th>
+						<th>Concentration</th>
+						<th>Total Units</th>
+					</tr>
+					
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM ucsd_degree;");
+					ResultSet rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("degree_type") %></td>
+							<td><%= rset.getString("dno") %></td>
+							<td><%= rset.getString("concentration") %></td>
+							<td><%= rset.getString("total_units") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					// conn.close();
+					%>
+				</table>					
+					
 				</table>
 				
 				<h3>Requirements Form</h3>
@@ -252,6 +280,38 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<!-- Reading in all degree requirements-->
+					<tr>
+						<th>Category</th>
+						<th>Degree Type</th>
+						<th>Department Number</th>
+						<th>Concentration</th>
+						<th>Number Units</th>
+						<th>Required Average</th>
+					</tr>
+					
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM ucsd_degree;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("category") %></td>
+							<td><%= rset.getString("degree_type") %></td>
+							<td><%= rset.getString("dno") %></td>
+							<td><%= rset.getString("concentration") %></td>
+							<td><%= rset.getString("number_units") %></td>
+							<td><%= rset.getString("required_average") %></td>
+
+						</tr>
+					<%
+					}
+					rset.close();
+					// conn.close();
+					%>					
+					
 				</table>
 			</td>
 		</tr>	
