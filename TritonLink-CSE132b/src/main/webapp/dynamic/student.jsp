@@ -14,9 +14,7 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				//Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
-
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
 				
 				String action = request.getParameter("action");
 				
@@ -313,7 +311,6 @@
 					conn.setAutoCommit(true);
 				}
 				
-				conn.close();
 				%>
 
 				<%--Presentation Code--%>
@@ -429,7 +426,41 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					<tr>
+						<th>SSN</th>
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+						<th>Student ID</th>
+						<th>Student Type</th>
+						<th>Resident Type</th>
+						<th>Department Number</th>
+						<th>Enrolled</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM student;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("FIRST_NAME") %></td>
+							<td><%= rset.getString("MIDDLE_NAME") %></td>
+							<td><%= rset.getString("LAST_NAME") %></td>
+							<td><%= rset.getString("STUDENT_ID") %></td>
+							<td><%= rset.getString("STUDENT_TYPE") %></td>
+							<td><%= rset.getString("RESIDENT_TYPE") %></td>
+							<td><%= rset.getString("DNO") %></td>
+							<td><%= rset.getString("ENROLLED") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
+				
 				
 				<%--periods_of_enrollment table--%>
 				<h3>Periods of Enrollment Form</h3>
@@ -483,6 +514,26 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					<tr>
+						<th>SSN</th>
+						<th>Start Date</th>
+						<th>End Date</th>
+					</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM periods_of_enrollment;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("PERIOD_START") %></td>
+							<td><%= rset.getString("PERIOD_END") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 				
 				<%--undergraduate table--%>
@@ -534,6 +585,30 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Major</th>
+						<th>Minor</th>
+						<th>College</th>
+					</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM undergraduate;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("MAJOR") %></td>
+							<td><%= rset.getString("MINOR") %></td>
+							<td><%= rset.getString("COLLEGE") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 					
 				<%--phd table--%>
@@ -572,6 +647,29 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Candidate Type</th>
+						<th>Advisor</th>
+						<th>College</th>
+					</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM phd;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("CANDIDATE_TYPE") %></td>
+							<td><%= rset.getString("ADVISOR") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 				
 				<%--prev_degree table--%>
@@ -619,6 +717,30 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>University</th>
+						<th>Type</th>
+						<th>Graduation Date</th>
+					</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM prev_degree;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("UNIVERSITY") %></td>
+							<td><%= rset.getString("TYPE") %></td>
+							<td><%= rset.getString("GRADUATION_DATE") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 				
 			</td>
