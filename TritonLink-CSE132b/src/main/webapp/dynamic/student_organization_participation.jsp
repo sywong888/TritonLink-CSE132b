@@ -35,11 +35,12 @@
 				
  				if (action != null && action.equals("update")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE student_organization_participation SET WHERE org_id = ? AND snn = ? AND position = ?;"));
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE student_organization_participation SET position = ? WHERE org_id = ? AND ssn = ? AND position = ?;"));
 					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("ORG_ID")));
-					pstmt.setString(2, request.getParameter("SSN"));
-					pstmt.setString(3, request.getParameter("POSITION"));	
+					pstmt.setString(1, request.getParameter("NEW_POSITION"));	
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("ORG_ID")));
+					pstmt.setString(3, request.getParameter("SSN"));
+					pstmt.setString(4, request.getParameter("POSITION"));	
 					
 					pstmt.executeUpdate();
 					
@@ -70,6 +71,7 @@
 						<th>Organization ID</th>
 						<th>Student SSN</th>
 						<th>Position</th>
+						<th>New Position</th>
 					</tr>
 					<%--Insert Code--%>
 					<tr>
@@ -78,6 +80,7 @@
 							<th><input value="" name="ORG_ID" size="10"></th>
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="POSITION" size="10"></th>
+							<th></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
@@ -88,6 +91,7 @@
 							<th><input value="" name="ORG_ID" size="10"></th>
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="POSITION" size="10"></th>
+							<th><input value="" name="NEW_POSITION" size="10"></th>							
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
@@ -98,6 +102,7 @@
 							<th><input value="" name="ORG_ID" size="10"></th>
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="POSITION" size="10"></th>
+							<th></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>

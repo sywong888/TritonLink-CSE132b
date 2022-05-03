@@ -37,13 +37,16 @@
 				
  				if (action != null && action.equals("update")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE event SET time = ?, location = ? WHERE org_id = ? AND title = ? AND date = ?;"));
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE event SET title = ?, date = ?, time = ?, location = ? WHERE org_id = ? AND title = ? AND date = ?;"));
 					
-					pstmt.setString(1, request.getParameter("TIME"));
-					pstmt.setString(2, request.getParameter("LOCATION"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("ORG_ID")));
-					pstmt.setString(4, request.getParameter("TITLE"));
-					pstmt.setString(5, request.getParameter("DATE"));
+					
+					pstmt.setString(1, request.getParameter("NEW_TITLE"));
+					pstmt.setString(2, request.getParameter("NEW_DATE"));					
+					pstmt.setString(3, request.getParameter("NEW_TIME"));
+					pstmt.setString(4, request.getParameter("NEW_LOCATION"));
+					pstmt.setInt(5, Integer.parseInt(request.getParameter("ORG_ID")));
+					pstmt.setString(6, request.getParameter("TITLE"));
+					pstmt.setString(7, request.getParameter("DATE"));
 					
 					pstmt.executeUpdate();
 					
@@ -76,6 +79,11 @@
 						<th>Event Date</th>
 						<th>Event Time</th>
 						<th>Event Location</th> 
+						<th>New Event Name</th>
+						<th>New Event Date</th>
+						<th>New Event Time</th>
+						<th>New Event Location</th>
+					
 					</tr>
 					<%--Insert Code--%>
 					<tr>
@@ -86,6 +94,10 @@
 							<th><input value="" name="DATE" size="10"></th>
 							<th><input value="" name="TIME" size="10"></th>
 							<th><input value="" name="LOCATION" size="10"></th>
+							<th></th>
+							<th></th>
+							<th></th>
+							<th></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
@@ -98,6 +110,10 @@
 							<th><input value="" name="DATE" size="10"></th>
 							<th><input value="" name="TIME" size="10"></th>
 							<th><input value="" name="LOCATION" size="10"></th>
+							<th><input value="" name="NEW_TITLE" size="10"></th>
+							<th><input value="" name="NEW_DATE" size="10"></th>
+							<th><input value="" name="NEW_TIME" size="10"></th>
+							<th><input value="" name="NEW_LOCATION" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
@@ -110,6 +126,10 @@
 							<th><input value="" name="DATE" size="10"></th>
 							<th><input value="" name="TIME" size="10"></th>
 							<th><input value="" name="LOCATION" size="10"></th>
+							<th></th>
+							<th></th>
+							<th></th>
+							<th></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
