@@ -71,6 +71,7 @@
 						<th>Last Name</th>
 						<th>Title</th>
 					</tr>
+					
 					<%--Insert Code--%>
 					<tr>
 						<form action="faculty.jsp" method="get">
@@ -83,6 +84,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Update Code--%>
 					<tr>
 						<form action="faculty.jsp" method="get">
@@ -95,6 +97,7 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
 					<%--Delete Code--%>
 					<tr>
 						<form action="faculty.jsp" method="get">
@@ -107,6 +110,32 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>Faculty ID</th>
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+						<th>Title</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM faculty;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("FACULTY_ID") %></td>
+							<td><%= rset.getString("FIRST_NAME") %></td>
+							<td><%= rset.getString("MIDDLE_NAME") %></td>
+							<td><%= rset.getString("LAST_NAME") %></td>
+							<td><%= rset.getString("TITLE") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 			</td>
 		</tr>	

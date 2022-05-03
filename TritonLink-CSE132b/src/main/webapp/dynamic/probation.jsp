@@ -21,7 +21,7 @@
 				// insert probation_reasons
 				if (action != null && action.equals("insert-reason")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO probation_reasons VALUES (?)"));
+					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO probation_reason VALUES (?)"));
 					
 					pstmt.setString(1, request.getParameter("REASON"));
 					
@@ -36,7 +36,7 @@
 					conn.setAutoCommit(false);
 					
 					// insert new reason into probation_reasons
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO probation_reasons VALUES (?);"));
+					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO probation_reason VALUES (?);"));
 					pstmt.setString(1, request.getParameter("NEW_REASON"));
 					pstmt.executeUpdate();
 					
@@ -47,7 +47,7 @@
 					pstmt.executeUpdate();
 					
 					// delete old reason from probation_reasons
-					pstmt = conn.prepareStatement("DELETE FROM probation_reasons WHERE reason = ?;");
+					pstmt = conn.prepareStatement("DELETE FROM probation_reason WHERE reason = ?;");
 					pstmt.setString(1, request.getParameter("OLD_REASON"));
 					pstmt.executeUpdate();
 					
@@ -124,6 +124,7 @@
 					<tr>
 						<th>Reason</th>
 					</tr>
+					
 					<%--Insert probation_reasons Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -132,6 +133,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Delete probation_reasons Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -140,10 +142,12 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
 					<tr>
 						<th>Old Reason</th>
 						<th>New Reason</th>
 					</tr>
+					
 					<%--Update probation_reasons Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -153,6 +157,23 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>Reason</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM probation_reason;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("REASON") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 				
 				<h3>Under Probation Form</h3>
@@ -162,6 +183,7 @@
 						<th>Reason</th>
 						<th>Date</th>
 					</tr>
+					
 					<%--Insert on_probation Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -172,6 +194,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Update on_probation Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -182,6 +205,7 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
 					<%--Delete on_probation Code--%>
 					<tr>
 						<form action="probation.jsp" method="get">
@@ -192,6 +216,28 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Reason</th>
+						<th>Date</th>
+					</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM on_probation;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("REASON") %></td>
+							<td><%= rset.getString("DATE") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 			</td>
 		</tr>	

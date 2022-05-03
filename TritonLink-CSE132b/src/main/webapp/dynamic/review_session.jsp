@@ -87,6 +87,7 @@
 						<th>Date</th>
 						<th>Time</th>
 					</tr>
+					
 					<%--Insert review_session Code--%>
 					<tr>
 						<form action="review_session.jsp" method="get">
@@ -104,6 +105,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Delete review_session Code--%>
 					<tr>
 						<form action="review_session.jsp" method="get">
@@ -121,6 +123,7 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
 					<tr>
 						<th>Course ID</th>
 						<th>Class ID</th>
@@ -131,6 +134,7 @@
 						<th>Old Time</th>
 						<th>New Time</th>
 					</tr>
+					
 					<%--Update review_session date Code--%>
 					<tr>
 						<form action="review_session.jsp" method="get">
@@ -150,6 +154,34 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Date</th>
+						<th>Time</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM review_session;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("COURSE_ID") %></td>
+							<td><%= rset.getString("CLASS_ID") %></td>
+							<td><%= rset.getString("QUARTER") %></td>
+							<td><%= rset.getString("YEAR") %></td>
+							<td><%= rset.getString("DATE") %></td>
+							<td><%= rset.getString("TIME") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 			</td>
 		</tr>	

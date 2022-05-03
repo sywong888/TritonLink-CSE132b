@@ -86,6 +86,7 @@
 						<th>Units Taken</th>
 						<th>Grade</th>
 					</tr>
+					
 					<%--Insert enroll Code--%>
 					<tr>
 						<form action="past_classes.jsp" method="get">
@@ -104,6 +105,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Update enroll Code--%>
 					<tr>
 						<form action="past_classes.jsp" method="get">
@@ -122,6 +124,7 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
 					<%--Delete enroll Code--%>
 					<tr>
 						<form action="past_classes.jsp" method="get">
@@ -140,6 +143,36 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Course ID</th>
+						<th>Class ID</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Units Taken</th>
+						<th>Grade</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM enroll;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("COURSE_ID") %></td>
+							<td><%= rset.getString("CLASS_ID") %></td>
+							<td><%= rset.getString("QUARTER") %></td>
+							<td><%= rset.getString("YEAR") %></td>
+							<td><%= rset.getString("UNITS_TAKEN") %></td>
+							<td><%= rset.getString("GRADE") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 			</td>
 		</tr>	

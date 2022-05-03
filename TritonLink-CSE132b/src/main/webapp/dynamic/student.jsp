@@ -14,8 +14,7 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
 				
 				String action = request.getParameter("action");
 				
@@ -49,8 +48,14 @@
 						pstmt = conn.prepareStatement(("INSERT INTO phd (ssn) VALUES (?);"));
 					}
  					pstmt.setString(1, request.getParameter("SSN"));
-					
 					pstmt.executeUpdate();
+					
+					// pstmt for graduate table					
+ 					if (studentType.equals("masters") || studentType.equals("phd")) {
+						pstmt = conn.prepareStatement("INSERT INTO graduate VALUES (?);");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
 					
 					// pstmt for bsms table
 					String bsms = request.getParameter("BSMS");
@@ -78,13 +83,36 @@
 					pstmt.setInt(7, Integer.parseInt(request.getParameter("DNO")));
 					pstmt.setString(8, request.getParameter("ENROLLED"));
 					pstmt.setString(9, request.getParameter("SSN"));
-					
 					pstmt.executeUpdate();
+					
+					// pstmt for student type specific tables
+					String studentType = request.getParameter("STUDENT_TYPE");
+ 					if (studentType.equals("undergraduate")) {
+						pstmt = conn.prepareStatement("INSERT INTO undergraduate (ssn) VALUES (?);");
+					} else if (studentType.equals("masters")) {
+						pstmt = conn.prepareStatement("INSERT INTO masters (ssn) VALUES (?);");
+					} else {
+						pstmt = conn.prepareStatement("INSERT INTO phd (ssn) VALUES (?);");
+					}
+ 					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					
+					// pstmt for graduate table		
+					pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM graduate WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					ResultSet rset = pstmt.executeQuery();
+					rset.next();
+					
+ 					if ((studentType.equals("masters") || studentType.equals("phd")) && rset.getInt("count") == 0) {
+						pstmt = conn.prepareStatement("INSERT INTO graduate VALUES (?);");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
 										
 					// update bsms if necessary
  					pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM bsms WHERE ssn = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
-					ResultSet rset = pstmt.executeQuery();
+					rset = pstmt.executeQuery();
 					rset.next();
 					
 					String bsms = request.getParameter("BSMS");
@@ -111,6 +139,9 @@
 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM undergraduate WHERE SSN = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.executeUpdate();
+					pstmt = conn.prepareStatement("DELETE FROM graduate WHERE SSN = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
  					pstmt = conn.prepareStatement("DELETE FROM masters WHERE SSN = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.executeUpdate();
@@ -128,6 +159,26 @@
  					
  					// delete from on_probation to avoid foreign key violations
  					pstmt = conn.prepareStatement("DELETE FROM on_probation WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from prev_degree to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM prev_degree WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from enroll to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from thesis_committee to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM thesis_committee WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from participates to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM participates WHERE ssn = ?;");
  					pstmt.setString(1, request.getParameter("SSN"));
  					pstmt.executeUpdate();
  					 					
@@ -611,6 +662,70 @@
 					rset.close();
 					%>
 				</table>
+				
+				<h3>Graduate Students</h3>
+				<table>
+				<tr>
+					<th>SSN</th>
+				</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM graduate;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
+				</table>
+				
+				<h3>BS/MS Students</h3>
+				<table>
+				<tr>
+					<th>SSN</th>
+				</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM bsms;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
+				</table>
+					
+				<h3>Master's Students</h3>
+				<table>
+				<tr>
+					<th>SSN</th>
+				</tr>
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM masters;");
+					rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
+				</table>
+					
 					
 				<%--phd table--%>
 				<h3>PhD Form</h3>

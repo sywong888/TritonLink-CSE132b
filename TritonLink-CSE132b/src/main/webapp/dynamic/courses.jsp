@@ -14,8 +14,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				//Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
@@ -37,7 +37,7 @@
 				
 				if (action != null && action.equals("update")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE courses SET department_number = ?, current_number = ?, old_number = ?, grading_method = ?, possible_units = ? WHERE faculty_id = ?;"));
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE courses SET dno = ?, current_number = ?, old_number = ?, grading_method = ?, possible_units = ? WHERE course_id = ?;"));
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("DEPARTMENT_NUMBER")));
 					pstmt.setString(2, request.getParameter("CURRENT_NUMBER"));
@@ -68,7 +68,7 @@
 				// insert prerequisites
 				if (action != null && action.equals("insert-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO prerequisite VALUES (?, ?)");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO prerequisites VALUES (?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
@@ -82,7 +82,7 @@
 				// update prerequisites
 				if (action != null && action.equals("update-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE prerequisite SET prereq_id = ? WHERE course_id = ? AND prereq_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE prerequisites SET prereq_id = ? WHERE course_id = ? AND prereq_id = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("NEW_PREREQ_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
@@ -97,7 +97,7 @@
 				// delete prerequisites
 				if (action != null && action.equals("delete-prereq")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM prerequisite WHERE course_id = ? AND prereq_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM prerequisites WHERE course_id = ? AND prereq_id = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("PREREQ_ID")));
@@ -128,7 +128,11 @@
 							<th><input value="" name="DEPARTMENT_NUMBER" size="10"></th>
 							<th><input value="" name="CURRENT_NUMBER" size="10"></th>
 							<th><input value="" name="OLD_NUMBER" size="10"></th>
-							<th><input value="" name="GRADING_METHOD" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+								<option value="both">Both</option>
+							</select></th>
 							<th><input value="" name="POSSIBLE_UNITS" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
@@ -141,7 +145,11 @@
 							<th><input value="" name="DEPARTMENT_NUMBER" size="10"></th>
 							<th><input value="" name="CURRENT_NUMBER" size="10"></th>
 							<th><input value="" name="OLD_NUMBER" size="10"></th>
-							<th><input value="" name="GRADING_METHOD" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+								<option value="both">Both</option>
+							</select></th>
 							<th><input value="" name="POSSIBLE_UNITS" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
@@ -154,7 +162,11 @@
 							<th><input value="" name="DEPARTMENT_NUMBER" size="10"></th>
 							<th><input value="" name="CURRENT_NUMBER" size="10"></th>
 							<th><input value="" name="OLD_NUMBER" size="10"></th>
-							<th><input value="" name="GRADING_METHOD" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+								<option value="both">Both</option>
+							</select></th>
 							<th><input value="" name="POSSIBLE_UNITS" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>

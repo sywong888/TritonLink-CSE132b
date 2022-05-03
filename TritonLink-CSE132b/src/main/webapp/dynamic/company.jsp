@@ -13,17 +13,18 @@
 			<td>
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				if (action != null && action.equals("insert")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO company VALUES (?, ?, ?)"));
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO company VALUES (?, ?, ?)");
 					
 					pstmt.setString(1, request.getParameter("NAME"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("ORG_ID")));
 					pstmt.setInt(3, Integer.parseInt(request.getParameter("DONATION_AMOUNT")));
+
 					
 					pstmt.executeUpdate();
 					

@@ -95,6 +95,7 @@
 						<th>SSN</th>
 						<th>Faculty ID</th>
 					</tr>
+					
 					<%--Insert thesis_committee Code--%>
 					<tr>
 						<form action="thesis_committee.jsp" method="get">
@@ -104,6 +105,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Delete thesis_committee Code--%>
 					<tr>
 						<form action="thesis_committee.jsp" method="get">
@@ -113,11 +115,13 @@
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
+					
 					<tr>
 						<th>SSN</th>
 						<th>Old Faculty ID</th>
 						<th>New Faculty ID</th>
 					</tr>
+					
 					<%--Update thesis_committee Code--%>
 					<tr>
 						<form action="thesis_committee.jsp" method="get">
@@ -128,6 +132,25 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Faculty ID</th>
+					</tr>
+					<%
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM thesis_committee;");
+					ResultSet rset = pstmt.executeQuery();
+				
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("SSN") %></td>
+							<td><%= rset.getString("FACULTY_ID") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
 				</table>
 			</td>
 		</tr>	
