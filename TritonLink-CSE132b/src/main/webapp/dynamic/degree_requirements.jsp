@@ -151,11 +151,10 @@
 				// update concentration name
 				if (action != null && action.equals("update-concentration-name")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE concentration SET concentration = ? WHERE concentration = ? AND course_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE concentration SET name = ? WHERE name = ?;");
 					
 					pstmt.setString(1, request.getParameter("NEW_CONCENTRATION"));
 					pstmt.setString(2, request.getParameter("OLD_CONCENTRATION"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
 					
 					pstmt.executeUpdate();
 					
@@ -164,9 +163,9 @@
 				}
 				
 				// update concentration course
-				if (action != null && action.equals("update-concentration-name")) {
+				if (action != null && action.equals("update-concentration-course")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE concentration SET course_id = ? WHERE concentration = ? AND course_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE concentration SET course_id = ? WHERE name = ? AND course_id = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("NEW_COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CONCENTRATION"));
@@ -178,10 +177,10 @@
 					conn.setAutoCommit(true);
 				}
 				
-				// update concentration course
+				// delete concentration
 				if (action != null && action.equals("delete-concentration")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM concentration WHERE concentration = ? AND course_id = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM concentration WHERE name = ? AND course_id = ?;");
 					
 					pstmt.setString(1, request.getParameter("CONCENTRATION"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
