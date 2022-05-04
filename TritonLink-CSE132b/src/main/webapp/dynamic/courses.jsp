@@ -18,6 +18,8 @@
 				//Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
+				
+				// insert courses
 				if (action != null && action.equals("insert")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO courses VALUES (?, ?, ?, ?, ?, ?)"));
@@ -35,6 +37,7 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// update courses
 				if (action != null && action.equals("update")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement(("UPDATE courses SET dno = ?, current_number = ?, old_number = ?, grading_method = ?, possible_units = ? WHERE course_id = ?;"));
@@ -53,12 +56,43 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// delete courses
 				if (action != null && action.equals("delete")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM courses WHERE course_id = ?;"));
 					
+					// delete from concentration to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM concentration WHERE course_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from meeting to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from review_session to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from review_session to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from prerequisites to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM prerequisites WHERE course_id = ? OR prereq_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from classes to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM classes WHERE course_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+ 					pstmt.executeUpdate();
+ 					
+					pstmt = conn.prepareStatement("DELETE FROM courses WHERE course_id = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					
 					pstmt.executeUpdate();
 					
 					conn.commit();

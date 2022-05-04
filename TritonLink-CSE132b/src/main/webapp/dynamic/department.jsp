@@ -45,18 +45,6 @@
 					conn.setAutoCommit(true);
 				}
 				
-				if (action != null && action.equals("delete")) {
-					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM department WHERE dno = ?;");
-					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("DNO")));
-					
-					pstmt.executeUpdate();
-					
-					conn.commit();
-					conn.setAutoCommit(true);
-				}
-				
 				// conn.close();
 				%>
 
@@ -76,20 +64,13 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
-					<%--Delete department Code--%>
-					<tr>
-						<form action="department.jsp" method="get">
-							<input type="hidden" value="delete" name="action">
-							<th><input value="" name="DNO" size="10"></th>
-							<th><input value="" name="DNAME" size="10"></th>
-							<th><input type="submit" value="Delete"></th>
-						</form>
-					</tr>
+
 					<tr>
 						<th>Department Number</th>
 						<th>Old Department Name</th>
 						<th>New Department Name</th>
 					</tr>
+					
 					<%--Update department Code--%>
  					<tr>
 						<form action="department.jsp" method="get">

@@ -65,7 +65,7 @@
 					pstmt.executeUpdate();
 					
 					// delete reason from probation_reasons
-					pstmt = conn.prepareStatement("DELETE FROM probation_reasons WHERE reason = ?;");
+					pstmt = conn.prepareStatement("DELETE FROM probation_reason WHERE reason = ?;");
 					pstmt.setString(1, request.getParameter("REASON"));
 					pstmt.executeUpdate();
 					

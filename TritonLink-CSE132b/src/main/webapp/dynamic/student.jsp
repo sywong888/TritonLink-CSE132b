@@ -177,8 +177,13 @@
  					pstmt.setString(1, request.getParameter("SSN"));
  					pstmt.executeUpdate();
  					
- 					// delete from participates to avoid foreign key violations
- 					pstmt = conn.prepareStatement("DELETE FROM participates WHERE ssn = ?;");
+ 					// delete from student_organization_participation to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM student_organization_participation WHERE ssn = ?;");
+ 					pstmt.setString(1, request.getParameter("SSN"));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from enroll to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE ssn = ?;");
  					pstmt.setString(1, request.getParameter("SSN"));
  					pstmt.executeUpdate();
  					 					
@@ -288,6 +293,74 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// delete bsms
+				if (action != null && action.equals("delete-bsms")) {
+					conn.setAutoCommit(false);
+					
+					// delete from graduate if necessary
+ 					PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM phd WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					ResultSet rset = pstmt.executeQuery();
+					rset.next();
+					
+					if (rset.getInt("count") == 0) {
+						pstmt = conn.prepareStatement("DELETE FROM graduate WHERE ssn = ?;");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+					rset.close();
+					
+					// delete from masters
+ 					pstmt = conn.prepareStatement("DELETE FROM masters WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					
+					pstmt = conn.prepareStatement("DELETE FROM masters WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// delete masters
+				if (action != null && action.equals("delete-masters")) {
+					conn.setAutoCommit(false);
+					
+					// delete from graduate if necessary
+ 					PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM phd WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					ResultSet rset = pstmt.executeQuery();
+					rset.next();
+					
+					if (rset.getInt("count") == 0) {
+						pstmt = conn.prepareStatement("DELETE FROM graduate WHERE ssn = ?;");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+					
+					// delete from bsms if necessary
+ 					pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM bsms WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					rset = pstmt.executeQuery();
+					rset.next();
+					
+					if (rset.getInt("count") == 1) {
+						pstmt = conn.prepareStatement("DELETE FROM bsms WHERE ssn = ?;");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+					
+					rset.close();
+					
+					pstmt = conn.prepareStatement("DELETE FROM masters WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
 				// update phd
 				if (action != null && action.equals("update-phd")) {
 					conn.setAutoCommit(false);
@@ -306,10 +379,22 @@
 				// delete phd
 				if (action != null && action.equals("delete-phd")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM phd WHERE ssn = ?;"));
 					
+					// delete from graduate if necessary
+ 					PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM masters WHERE ssn = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
+					ResultSet rset = pstmt.executeQuery();
+					rset.next();
 					
+					if (rset.getInt("count") == 0) {
+						pstmt = conn.prepareStatement("DELETE FROM graduate WHERE ssn = ?;");
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.executeUpdate();
+					}
+					rset.close();
+					
+					pstmt = conn.prepareStatement("DELETE FROM phd WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -663,67 +748,93 @@
 					%>
 				</table>
 				
+				<%--graduate table--%>
 				<h3>Graduate Students</h3>
 				<table>
-				<tr>
-					<th>SSN</th>
-				</tr>
-					<%
-					pstmt = conn.prepareStatement("SELECT * FROM graduate;");
-					rset = pstmt.executeQuery();
+					<tr>
+						<th>SSN</th>
+					</tr>
+						<%
+						pstmt = conn.prepareStatement("SELECT * FROM graduate;");
+						rset = pstmt.executeQuery();
 				
-					while (rset.next()) {
-					%>
-						
-						<tr>
-							<td><%= rset.getString("SSN") %></td>
-						</tr>
-					<%
-					}
-					rset.close();
-					%>
+						while (rset.next()) {
+						%>
+							<tr>
+								<td><%= rset.getString("SSN") %></td>
+							</tr>
+						<%
+						}
+						rset.close();
+						%>
 				</table>
 				
+				<%--bsms table--%>
 				<h3>BS/MS Students</h3>
 				<table>
-				<tr>
-					<th>SSN</th>
-				</tr>
-					<%
-					pstmt = conn.prepareStatement("SELECT * FROM bsms;");
-					rset = pstmt.executeQuery();
+					<tr>
+						<th>SSN</th>
+					</tr>
+					
+					<%--Delete bsms Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="delete-bsms" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					
+					<tr>
+						<th>SSN</th>
+					</tr>
+						<%
+						pstmt = conn.prepareStatement("SELECT * FROM bsms;");
+						rset = pstmt.executeQuery();
 				
-					while (rset.next()) {
-					%>
-						
-						<tr>
-							<td><%= rset.getString("SSN") %></td>
-						</tr>
-					<%
-					}
-					rset.close();
-					%>
+						while (rset.next()) {
+						%>
+							<tr>
+								<td><%= rset.getString("SSN") %></td>
+							</tr>
+						<%
+						}
+						rset.close();
+						%>
 				</table>
 					
-				<h3>Master's Students</h3>
-				<table>
-				<tr>
-					<th>SSN</th>
-				</tr>
-					<%
-					pstmt = conn.prepareStatement("SELECT * FROM masters;");
-					rset = pstmt.executeQuery();
+				<%--masters table--%>
+				<h3>Master's Form</h3>
+					<table>
+					<tr>
+						<th>SSN</th>
+					</tr>
+					
+					<%--Delete masters Code--%>
+					<tr>
+						<form action="student.jsp" method="get">
+							<input type="hidden" value="delete-masters" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					
+					<tr>
+						<th>SSN</th>
+					</tr>
+						<%
+						pstmt = conn.prepareStatement("SELECT * FROM masters;");
+						rset = pstmt.executeQuery();
 				
-					while (rset.next()) {
-					%>
-						
-						<tr>
-							<td><%= rset.getString("SSN") %></td>
-						</tr>
-					<%
-					}
-					rset.close();
-					%>
+						while (rset.next()) {
+						%>
+							<tr>
+								<td><%= rset.getString("SSN") %></td>
+							</tr>
+						<%
+						}
+						rset.close();
+						%>
 				</table>
 					
 					

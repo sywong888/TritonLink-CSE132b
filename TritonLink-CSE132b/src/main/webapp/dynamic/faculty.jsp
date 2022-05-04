@@ -17,6 +17,8 @@
 				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
 				
 				String action = request.getParameter("action");
+				
+				// insert faculty
 				if (action != null && action.equals("insert")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO faculty VALUES (?, ?, ?, ?, ?)"));
@@ -33,6 +35,7 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// update faculty
 				if (action != null && action.equals("update-faculty")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement(("UPDATE faculty SET first_name = ?, middle_name = ?, last_name = ?, title = ? WHERE faculty_id = ?;"));
@@ -49,12 +52,22 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// delete faculty
 				if (action != null && action.equals("delete")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM faculty WHERE faculty_id = ?;"));
 					
+					// delete from classes to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM classes WHERE instructor_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("FACULTY_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from thesis_committee to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM thesis_committee WHERE faculty_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("FACULTY_ID")));
+ 					pstmt.executeUpdate();
+ 					
+					pstmt = conn.prepareStatement(("DELETE FROM faculty WHERE faculty_id = ?;"));
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("FACULTY_ID")));
-					
 					pstmt.executeUpdate();
 					
 					conn.commit();

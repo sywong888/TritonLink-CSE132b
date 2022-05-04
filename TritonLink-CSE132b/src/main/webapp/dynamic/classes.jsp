@@ -76,8 +76,15 @@
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
+					
+					// delete from enroll to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.executeUpdate();
 
-					// delete from classes
 					pstmt = conn.prepareStatement("DELETE FROM classes WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
@@ -151,41 +158,6 @@
 					conn.setAutoCommit(true);
 				}
 				
-				// insert review_session
-				if (action != null && action.equals("insert-review")) {
-					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO review_session VALUES (?, ?, ?, ?, ?, ?)");
-					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
-					pstmt.setString(3, request.getParameter("QUARTER"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(5, request.getParameter("DATE"));
-					pstmt.setString(6, request.getParameter("TIME"));
-					
-					pstmt.executeUpdate();
-					
-					conn.commit();
-					conn.setAutoCommit(true);
-				}
-				
-				// delete review_session
-				if (action != null && action.equals("delete-review")) {
-					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND date = ? AND time = ?;");
-					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
-					pstmt.setString(3, request.getParameter("QUARTER"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(5, request.getParameter("DATE"));
-					pstmt.setString(6, request.getParameter("TIME"));
-					
-					pstmt.executeUpdate();
-					
-					conn.commit();
-					conn.setAutoCommit(true);
-				}
 				%>
 
 				<%--Presentation Code--%>
@@ -418,82 +390,6 @@
 					%>						
 						
 					</tr>
-				</table>
-				
-				<h3>Review Session Form</h3>
-				<table>
-					<tr>
-						<th>Course ID</th>
-						<th>Class ID</th>
-						<th>Quarter</th>
-						<th>Year</th>
-						<th>Date</th>
-						<th>Time</th>
-					</tr>
-					<%--Insert review_session Code--%>
-					<tr>
-						<form action="classes.jsp" method="get">
-							<input type="hidden" value="insert-review" name="action">
-							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><select name="QUARTER">
-								<option value="F">Fall</option>
-								<option value="W">Winter</option>
-								<option value="S">Spring</option>
-							</select></th>
-							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="DATE" size="10"></th>
-							<th><input value="" name="TIME" size="10"></th>
-							<th><input type="submit" value="Insert"></th>
-						</form>
-					</tr>
-					<%--Delete review_session Code--%>
-					<tr>
-						<form action="classes.jsp" method="get">
-							<input type="hidden" value="delete-review" name="action">
-							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><select name="QUARTER">
-								<option value="F">Fall</option>
-								<option value="W">Winter</option>
-								<option value="S">Spring</option>
-							</select></th>
-							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="DATE" size="10"></th>
-							<th><input value="" name="TIME" size="10"></th>
-							<th><input type="submit" value="Delete"></th>
-						</form>
-					</tr>
-					
-					<!-- Reading in all reviews -->
-					<tr>
-						<th>Course ID</th>
-						<th>Class ID</th>
-						<th>Quarter</th>
-						<th>Year</th>
-						<th>Date</th>
-						<th>Time</th>
-					</tr>
-					
-					<%
-					pstmt = conn.prepareStatement("SELECT * FROM review_session;");
-					rset = pstmt.executeQuery();
-					
-					while (rset.next()) {
-					%>
-						<tr>
-							<td><%= rset.getString("course_id") %></td>
-							<td><%= rset.getString("class_id") %></td>
-							<td><%= rset.getString("quarter") %></td>
-							<td><%= rset.getString("year") %></td>
-							<td><%= rset.getString("date") %></td>
-							<td><%= rset.getString("time") %></td>
-						</tr>
-					<%
-					}
-					rset.close();
-					%>					
-					
 				</table>
 			</td>
 		</tr>	

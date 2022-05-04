@@ -58,8 +58,15 @@
 				// delete ucsd_degree
 				if (action != null && action.equals("delete-degree")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM ucsd_degree WHERE degree_type = ? AND dno = ? AND concentration = ?;");
 					
+					// delete from degree_requirement to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM degree_requirement WHERE degree_type = ? AND dno = ? AND concentration = ?;");
+ 					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
+					pstmt.setString(3, request.getParameter("CONCENTRATION"));
+ 					pstmt.executeUpdate();
+ 					
+					pstmt = conn.prepareStatement("DELETE FROM ucsd_degree WHERE degree_type = ? AND dno = ? AND concentration = ?;");
 					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
 					pstmt.setString(3, request.getParameter("CONCENTRATION"));

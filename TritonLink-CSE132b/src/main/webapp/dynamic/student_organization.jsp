@@ -47,10 +47,24 @@
 				
 				if (action != null && action.equals("delete")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM student_organization WHERE org_id = ?;"));
 					
+					// delete from student_organization_participation to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM student_organization_participation WHERE org_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("ORG_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from company to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM company WHERE org_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("ORG_ID")));
+ 					pstmt.executeUpdate();
+ 					
+ 					// delete from event to avoid foreign key violations
+ 					pstmt = conn.prepareStatement("DELETE FROM event WHERE org_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("ORG_ID")));
+ 					pstmt.executeUpdate();
+ 					
+					pstmt = conn.prepareStatement("DELETE FROM student_organization WHERE org_id = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("ORG_ID")));
-					
 					pstmt.executeUpdate();
 					
 					conn.commit();
