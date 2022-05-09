@@ -7,6 +7,7 @@
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
+	<%@ page import="java.util.*" %>
 	
 	<table>
 		<tr>
@@ -14,8 +15,8 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				
@@ -24,10 +25,39 @@
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'S', 2022, ?, ?, NULL)");
 					
+					
+					/*
+						Trying to insert a class based on existing course
+						Should throw an exception if the student is taking the class for an invalid amount of units (not among the parsed values)
+					*/
+					
+					/*
+						1. Get the relation of course that matches the class
+						2. Get the possible_units attribute of the relation
+						3. Spit it into its values
+						4. Logic to check if the user inputted value is valid
+					*/
+					
+					String courseUnitsQuery = "SELECT co.possible_units FROM classes cl, courses co WHERE cl.course_id = co.course_id";
+					PreparedStatement unitsStatement = conn.prepareStatement(courseUnitsQuery);
+					ResultSet possibleUnitsTuple = unitsStatement.executeQuery();
+					
+					// Should get comma-separated values of units
+					String possibleUnits = possibleUnitsTuple.getString("possible_units");
+					
+					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+					
+					String unitsTaken = request.getParameter("UNITS_TAKEN");
+					
+					// Check if the user inputted value is valid
+					if (listOfUnits.contains(unitsTaken)) {
+						
+					}
+					
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(3, request.getParameter("CLASS_ID"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+					pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
 					pstmt.setString(5, request.getParameter("STATUS"));
 					
 					pstmt.executeUpdate();
