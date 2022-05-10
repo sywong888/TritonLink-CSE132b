@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Classes Home Page</title>
+<title>Classes Page</title>
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
@@ -13,9 +13,8 @@
 			<td>
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
-
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				
@@ -84,7 +83,6 @@
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
-
 					pstmt = conn.prepareStatement("DELETE FROM classes WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
@@ -111,7 +109,6 @@
 					pstmt.setString(8, request.getParameter("TYPE"));
 					pstmt.setString(9, request.getParameter("MANDATORY"));
 					pstmt.setInt(10, Integer.parseInt(request.getParameter("DURATION")));
-
 					pstmt.executeUpdate();
 					
 					conn.commit();

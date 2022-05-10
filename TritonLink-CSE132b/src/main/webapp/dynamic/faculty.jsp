@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Faculty home page</title>
+<title>Faculty Page</title>
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
@@ -14,21 +14,21 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
 				
 				String action = request.getParameter("action");
 				
 				// insert faculty
 				if (action != null && action.equals("insert")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO faculty VALUES (?, ?, ?, ?, ?)"));
+					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO faculty VALUES (?, ?, ?, ?, ?, ?)"));
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("FACULTY_ID")));
 					pstmt.setString(2, request.getParameter("FIRST_NAME"));
 					pstmt.setString(3, request.getParameter("MIDDLE_NAME"));
 					pstmt.setString(4, request.getParameter("LAST_NAME"));
 					pstmt.setString(5, request.getParameter("TITLE"));
+					pstmt.setInt(6, Integer.parseInt(request.getParameter("DNO")));
 					
 					pstmt.executeUpdate();
 					
@@ -39,13 +39,14 @@
 				// update faculty
 				if (action != null && action.equals("update-faculty")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE faculty SET first_name = ?, middle_name = ?, last_name = ?, title = ? WHERE faculty_id = ?;"));
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE faculty SET first_name = ?, middle_name = ?, last_name = ?, title = ?, dno = ? WHERE faculty_id = ?;"));
 					
 					pstmt.setString(1, request.getParameter("FIRST_NAME"));
 					pstmt.setString(2, request.getParameter("MIDDLE_NAME"));
 					pstmt.setString(3, request.getParameter("LAST_NAME"));
 					pstmt.setString(4, request.getParameter("TITLE"));
 					pstmt.setInt(5, Integer.parseInt(request.getParameter("FACULTY_ID")));
+					pstmt.setInt(6, Integer.parseInt(request.getParameter("DNO")));
 					
 					pstmt.executeUpdate();
 					
@@ -84,6 +85,7 @@
 						<th>Middle Name</th>
 						<th>Last Name</th>
 						<th>Title</th>
+						<th>Department Number</th>
 					</tr>
 					
 					<%--Insert Code--%>
@@ -95,6 +97,7 @@
 							<th><input value="" name="MIDDLE_NAME" size="10"></th>
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="TITLE" size="10"></th>
+							<th><input value="" name="DNO" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
@@ -108,6 +111,7 @@
 							<th><input value="" name="MIDDLE_NAME" size="10"></th>
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="TITLE" size="10"></th>
+							<th><input value="" name="DNO" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
@@ -121,6 +125,7 @@
 							<th><input value="" name="MIDDLE_NAME" size="10"></th>
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="TITLE" size="10"></th>
+							<th><input value="" name="DNO" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
@@ -131,6 +136,7 @@
 						<th>Middle Name</th>
 						<th>Last Name</th>
 						<th>Title</th>
+						<th>Department Number</th>
 					</tr>
 					<%
 					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM faculty;");
@@ -145,6 +151,7 @@
 							<td><%= rset.getString("MIDDLE_NAME") %></td>
 							<td><%= rset.getString("LAST_NAME") %></td>
 							<td><%= rset.getString("TITLE") %></td>
+							<td><%= rset.getString("DNO") %></td>
 						</tr>
 					<%
 					}
