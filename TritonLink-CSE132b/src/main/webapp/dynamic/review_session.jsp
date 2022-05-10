@@ -14,15 +14,15 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 			
 				// insert review_session
 				if (action != null && action.equals("insert-review")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO review_session VALUES (?, ?, ?, ?, ?, ?)");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO review_session VALUES (?, ?, ?, ?, ?, ?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
@@ -30,6 +30,7 @@
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.setString(5, request.getParameter("DATE"));
 					pstmt.setString(6, request.getParameter("TIME"));
+					pstmt.setInt(7, Integer.parseInt(request.getParameter("DURATION")));
 					
 					pstmt.executeUpdate();
 					
@@ -40,16 +41,17 @@
 				// update review_session
 				if (action != null && action.equals("update-review")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE review_session SET date = ?, time = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND date = ? AND time = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE review_session SET date = ?, time = ?, duration = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND date = ? AND time = ?;");
 					
 					pstmt.setString(1, request.getParameter("NEW_DATE"));
 					pstmt.setString(2, request.getParameter("NEW_TIME"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(4, request.getParameter("CLASS_ID"));
-					pstmt.setString(5, request.getParameter("QUARTER"));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(7, request.getParameter("OLD_DATE"));
-					pstmt.setString(8, request.getParameter("OLD_TIME"));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("NEW_DURATION")));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(5, request.getParameter("CLASS_ID"));
+					pstmt.setString(6, request.getParameter("QUARTER"));
+					pstmt.setInt(7, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(8, request.getParameter("OLD_DATE"));
+					pstmt.setString(9, request.getParameter("OLD_TIME"));
 					
 					pstmt.executeUpdate();
 					
@@ -60,7 +62,7 @@
 				// delete review_session
 				if (action != null && action.equals("delete-review")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND date = ? AND time = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND date = ? AND time = ? AND duration = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
@@ -68,6 +70,7 @@
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.setString(5, request.getParameter("DATE"));
 					pstmt.setString(6, request.getParameter("TIME"));
+					pstmt.setInt(7, Integer.parseInt(request.getParameter("DURATION")));
 					
 					pstmt.executeUpdate();
 					
@@ -86,6 +89,7 @@
 						<th>Year</th>
 						<th>Date</th>
 						<th>Time</th>
+						<th>Duration</th>
 					</tr>
 					
 					<%--Insert review_session Code--%>
@@ -102,6 +106,7 @@
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="DATE" size="10"></th>
 							<th><input value="" name="TIME" size="10"></th>
+							<th><input value="" name="DURATION" size="10"></th>							
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
@@ -120,6 +125,7 @@
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="DATE" size="10"></th>
 							<th><input value="" name="TIME" size="10"></th>
+							<th><input value="" name="DURATION" size="10"></th>							
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
@@ -133,6 +139,7 @@
 						<th>New Date</th>
 						<th>Old Time</th>
 						<th>New Time</th>
+						<th>New Duration</th>
 					</tr>
 					
 					<%--Update review_session date Code--%>
@@ -151,6 +158,7 @@
 							<th><input value="" name="NEW_DATE" size="10"></th>
 							<th><input value="" name="OLD_TIME" size="10"></th>
 							<th><input value="" name="NEW_TIME" size="10"></th>
+							<th><input value="" name="NEW_DURATION" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
@@ -162,6 +170,7 @@
 						<th>Year</th>
 						<th>Date</th>
 						<th>Time</th>
+						<th>Duration</th>
 					</tr>
 					<%
 					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM review_session;");
@@ -177,6 +186,7 @@
 							<td><%= rset.getString("YEAR") %></td>
 							<td><%= rset.getString("DATE") %></td>
 							<td><%= rset.getString("TIME") %></td>
+							<td><%= rset.getString("DURATION") %></td>							
 						</tr>
 					<%
 					}

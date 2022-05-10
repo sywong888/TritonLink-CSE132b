@@ -23,3 +23,4 @@ CREATE TABLE student_organization (org_id integer, name varchar(255), yearly_bud
 CREATE TABLE student_organization_participation (org_id integer, ssn char(9), position varchar(255), PRIMARY KEY (org_id, ssn, position), FOREIGN KEY (ssn) REFERENCES student(ssn), FOREIGN KEY (org_id) REFERENCES student_organization(org_id));
 CREATE TABLE company (name varchar(255), org_id integer, PRIMARY KEY (name, org_id), FOREIGN KEY (org_id) REFERENCES student_organization (org_id));
 CREATE TABLE event (org_id integer, title varchar(255), date varchar(255), time varchar(255), location varchar(255), PRIMARY KEY (org_id, title, date), FOREIGN KEY (org_id) REFERENCES student_organization (org_id));
+

@@ -42,28 +42,36 @@
 					PreparedStatement unitsStatement = conn.prepareStatement(courseUnitsQuery);
 					ResultSet possibleUnitsTuple = unitsStatement.executeQuery();
 					
-					// Should get comma-separated values of units
-					String possibleUnits = possibleUnitsTuple.getString("possible_units");
-					
-					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
-					
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
 					
-					// Check if the user inputted value is valid
-					if (listOfUnits.contains(unitsTaken)) {
+					// Check that there is a matching row from the query
+					if (possibleUnitsTuple.next()) {
+						String possibleUnits = possibleUnitsTuple.getString("possible_units");
+						// Should get comma-separated values of units					
+						List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
 						
+						// Check if the user inputted value is valid
+						if (listOfUnits.contains(unitsTaken)) {
+							pstmt.setString(1, request.getParameter("SSN"));
+							pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+							pstmt.setString(3, request.getParameter("CLASS_ID"));
+							pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
+							pstmt.setString(5, request.getParameter("STATUS"));
+							
+							pstmt.executeUpdate();
+							
+							conn.commit();
+							conn.setAutoCommit(true);
+						}
+						else {
+							System.out.println("WRONG WRONG WRONG WRONG WRONG WRONG WRONG WRONG WRONG");
+						}
 					}
-					
-					pstmt.setString(1, request.getParameter("SSN"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(3, request.getParameter("CLASS_ID"));
-					pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
-					pstmt.setString(5, request.getParameter("STATUS"));
-					
-					pstmt.executeUpdate();
-					
-					conn.commit();
-					conn.setAutoCommit(true);
+					else {
+						System.out.println("No matches");
+					}
+
+
 				}
 				
 				// update enroll
