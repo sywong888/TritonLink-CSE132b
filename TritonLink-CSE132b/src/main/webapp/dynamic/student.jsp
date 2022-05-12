@@ -200,14 +200,29 @@
 				if (action != null && action.equals("insert-periods")) {
 					conn.setAutoCommit(false);
 					
-					// pstmt for student table
-					PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO periods_of_enrollment VALUES (?, ?, ?);"));
-			
-					pstmt.setString(1, request.getParameter("SSN"));
-					pstmt.setString(2, request.getParameter("PERIOD_START"));
-					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					String startQuarter = request.getParameter("START_QUARTER");
+					int startYear = Integer.parseInt(request.getParameter("START_YEAR"));
+					String endQuarter = request.getParameter("END_QUARTER");
+					int endYear = Integer.parseInt(request.getParameter("END_YEAR"));
 					
-					pstmt.executeUpdate();
+					// WI -> SP -> FA
+					if ((startQuarter.compareTo(endQuarter) == 0 && startYear < endYear) || 
+							(startQuarter.compareTo(endQuarter) > 0 && startYear <= endYear) || 
+							(startQuarter.compareTo(endQuarter) < 0 && startYear < endYear)) {
+						// pstmt for student table
+						PreparedStatement pstmt = conn.prepareStatement(("INSERT INTO periods_of_enrollment VALUES (?, ?, ?, ?, ?);"));
+				
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.setString(2, request.getParameter("START_QUARTER"));
+						pstmt.setInt(3, Integer.parseInt(request.getParameter("START_YEAR")));
+						pstmt.setString(4, request.getParameter("END_QUARTER"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("END_YEAR")));
+						
+						pstmt.executeUpdate();
+					} else {
+						System.out.println(startQuarter+startYear+endQuarter+endYear);
+						System.out.println("ERROR: make sure that the start date is before the end date");
+					}
 					
 					conn.commit();
 					conn.setAutoCommit(true);
@@ -217,15 +232,31 @@
 				if (action != null && action.equals("update-periods-start")) {
 					conn.setAutoCommit(false);
 					
-					// pstmt for student table
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE periods_of_enrollment SET period_start = ? WHERE ssn = ? AND period_end = ?;"));
-			
-					pstmt.setString(1, request.getParameter("PERIOD_START"));
-					pstmt.setString(2, request.getParameter("SSN"));
-					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					String startQuarter = request.getParameter("NEW_START_QUARTER");
+					int startYear = Integer.parseInt(request.getParameter("NEW_START_YEAR"));
+					String endQuarter = request.getParameter("END_QUARTER");
+					int endYear = Integer.parseInt(request.getParameter("END_YEAR"));
 					
-					pstmt.executeUpdate();
-					
+					// WI -> SP -> FA
+					if ((startQuarter.compareTo(endQuarter) == 0 && startYear < endYear) || 
+							(startQuarter.compareTo(endQuarter) > 0 && startYear <= endYear) || 
+							(startQuarter.compareTo(endQuarter) < 0 && startYear < endYear)) {
+						PreparedStatement pstmt = conn.prepareStatement("UPDATE periods_of_enrollment SET start_quarter = ?, start_year = ? WHERE ssn = ? AND start_quarter = ? AND start_year = ? AND end_quarter = ? AND end_year = ?;");
+						
+						pstmt.setString(1, request.getParameter("NEW_START_QUARTER"));
+						pstmt.setInt(2, Integer.parseInt(request.getParameter("NEW_START_YEAR")));
+						pstmt.setString(3, request.getParameter("SSN"));
+						pstmt.setString(4, request.getParameter("OLD_START_QUARTER"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("OLD_START_YEAR")));
+						pstmt.setString(6, request.getParameter("END_QUARTER"));
+						pstmt.setInt(7, Integer.parseInt(request.getParameter("END_YEAR")));
+						
+						pstmt.executeUpdate();
+					} else {
+						System.out.println(startQuarter+startYear+endQuarter+endYear);
+						System.out.println("ERROR: make sure that the start date is before the end date");
+					}
+
 					conn.commit();
 					conn.setAutoCommit(true);
 				}
@@ -234,15 +265,31 @@
 				if (action != null && action.equals("update-periods-end")) {
 					conn.setAutoCommit(false);
 					
-					// pstmt for student table
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE periods_of_enrollment SET period_end = ? WHERE ssn = ? AND period_start = ?;"));
-			
-					pstmt.setString(1, request.getParameter("PERIOD_END"));
-					pstmt.setString(2, request.getParameter("SSN"));
-					pstmt.setString(3, request.getParameter("PERIOD_START"));
+					String startQuarter = request.getParameter("START_QUARTER");
+					int startYear = Integer.parseInt(request.getParameter("START_YEAR"));
+					String endQuarter = request.getParameter("NEW_END_QUARTER");
+					int endYear = Integer.parseInt(request.getParameter("NEW_END_YEAR"));
 					
-					pstmt.executeUpdate();
-					
+					// WI -> SP -> FA
+					if ((startQuarter.compareTo(endQuarter) == 0 && startYear < endYear) || 
+							(startQuarter.compareTo(endQuarter) > 0 && startYear <= endYear) || 
+							(startQuarter.compareTo(endQuarter) < 0 && startYear < endYear)) {
+						PreparedStatement pstmt = conn.prepareStatement("UPDATE periods_of_enrollment SET end_quarter = ?, end_year = ? WHERE ssn = ? AND end_quarter = ? AND end_year = ?  AND start_quarter = ? AND start_year = ?;");
+						
+						pstmt.setString(1, request.getParameter("NEW_END_QUARTER"));
+						pstmt.setInt(2, Integer.parseInt(request.getParameter("NEW_END_YEAR")));
+						pstmt.setString(3, request.getParameter("SSN"));
+						pstmt.setString(4, request.getParameter("OLD_END_QUARTER"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("OLD_END_YEAR")));
+						pstmt.setString(6, request.getParameter("START_QUARTER"));
+						pstmt.setInt(7, Integer.parseInt(request.getParameter("START_YEAR")));
+						
+						pstmt.executeUpdate();
+					} else {
+						System.out.println(startQuarter+startYear+endQuarter+endYear);
+						System.out.println("ERROR: make sure that the start date is before the end date");
+					}
+
 					conn.commit();
 					conn.setAutoCommit(true);
 				}
@@ -252,11 +299,13 @@
 					conn.setAutoCommit(false);
 					
 					// pstmt for student table
-					PreparedStatement pstmt = conn.prepareStatement(("DELETE FROM periods_of_enrollment WHERE ssn = ? AND period_start = ? AND period_end = ?;"));
-			
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM periods_of_enrollment WHERE ssn = ? AND start_quarter = ? AND start_year = ? AND end_quarter = ? AND end_year = ?;");
+					
 					pstmt.setString(1, request.getParameter("SSN"));
-					pstmt.setString(2, request.getParameter("PERIOD_START"));
-					pstmt.setString(3, request.getParameter("PERIOD_END"));
+					pstmt.setString(2, request.getParameter("START_QUARTER"));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("START_YEAR")));
+					pstmt.setString(4, request.getParameter("END_QUARTER"));
+					pstmt.setInt(5, Integer.parseInt(request.getParameter("END_YEAR")));
 					
 					pstmt.executeUpdate();
 					
@@ -604,8 +653,10 @@
 				<table>
 					<tr>
 						<th>SSN</th>
-						<th>Start</th>
-						<th>End</th>
+						<th>Start Quarter</th>
+						<th>Start Year</th>
+						<th>End Quarter</th>
+						<th>End Year</th>
 					</tr>
 					
 					<%--Insert periods_of_enrollment Code--%>
@@ -613,21 +664,67 @@
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="insert-periods" name="action">
 							<th><input value="" name="SSN" size="10"></th>
-							<th><input value="" name="PERIOD_START" size="10"></th>
-							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><select name="START_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="START_YEAR" size="10"></th>
+							<th><select name="END_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="END_YEAR" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
 					
-					<%--Update start of periods_of_enrollment Code--%>
+					<tr>
+						<th>SSN</th>
+						<th>Old Start Quarter</th>
+						<th>Old Start Year</th>
+						<th>New Start Quarter</th>
+						<th>New Start Year</th>
+						<th>End Quarter</th>
+						<th>End Year</th>
+					</tr>
+					
+ 					<%--Update start of periods_of_enrollment Code--%>
 					<tr>
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="update-periods-start" name="action">
 							<th><input value="" name="SSN" size="10"></th>
-							<th><input value="" name="PERIOD_START" size="10"></th>
-							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><select name="OLD_START_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="OLD_START_YEAR" size="10"></th>
+							<th><select name="NEW_START_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="NEW_START_YEAR" size="10"></th>
+							<th><select name="END_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="END_YEAR" size="10"></th>
 							<th><input type="submit" value="Update Start"></th>
 						</form>
+					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Start Quarter</th>
+						<th>Start Year</th>
+						<th>Old End Quarter</th>
+						<th>Old End Year</th>
+						<th>New End Quarter</th>
+						<th>New End Year</th>
 					</tr>
 					
 					<%--Update end of periods_of_enrollment Code--%>
@@ -635,8 +732,24 @@
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="update-periods-end" name="action">
 							<th><input value="" name="SSN" size="10"></th>
-							<th><input value="" name="PERIOD_START" size="10"></th>
-							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><select name="START_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="START_YEAR" size="10"></th>
+							<th><select name="OLD_END_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="OLD_END_YEAR" size="10"></th>
+							<th><select name="NEW_END_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="NEW_END_YEAR" size="10"></th>
 							<th><input type="submit" value="Update End"></th>
 						</form>
 					</tr>
@@ -646,16 +759,30 @@
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="delete-periods" name="action">
 							<th><input value="" name="SSN" size="10"></th>
-							<th><input value="" name="PERIOD_START" size="10"></th>
-							<th><input value="" name="PERIOD_END" size="10"></th>
+							<th><select name="START_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="START_YEAR" size="10"></th>
+							<th><select name="END_QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="END_YEAR" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
-					<tr>
+					
+ 					<tr>
 						<th>SSN</th>
-						<th>Start Date</th>
-						<th>End Date</th>
+						<th>Start Quarter</th>
+						<th>Start Year</th>
+						<th>End Quarter</th>
+						<th>End Year</th>
 					</tr>
+					
 					<%
 					pstmt = conn.prepareStatement("SELECT * FROM periods_of_enrollment;");
 					rset = pstmt.executeQuery();
@@ -664,8 +791,10 @@
 					%>
 						<tr>
 							<td><%= rset.getString("SSN") %></td>
-							<td><%= rset.getString("PERIOD_START") %></td>
-							<td><%= rset.getString("PERIOD_END") %></td>
+							<td><%= rset.getString("START_QUARTER") %></td>
+							<td><%= rset.getString("START_YEAR") %></td>
+							<td><%= rset.getString("END_QUARTER") %></td>
+							<td><%= rset.getString("END_YEAR") %></td>
 						</tr>
 					<%
 					}
