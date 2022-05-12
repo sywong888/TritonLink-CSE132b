@@ -22,70 +22,93 @@
 				// insert enroll
 				if (action != null && action.equals("insert-enroll")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'S', 2022, ?, ?, NULL)");
-					
-					
 					/*
-						Trying to insert a class based on existing course
-						Should throw an exception if the student is taking the class for an invalid amount of units (not among the parsed values)
+						Should throw an exception if the student is enrolling in a class for an invalid amount of units (not among the parsed values)
+						or for an invalid grading option
 					*/
 					
 					/*
-						1. Get the relation of course that matches the class
-						2. Get the possible_units attribute of the relation
-						3. Spit it into its values
-						4. Logic to check if the user inputted value is valid
+						1. Find the grading options and possible units for a course
+						3. Split the possible units (comma separated) into a list
+						4. Check if student is enrolling with the proper grading option and # of units
 					*/
 					
-					String courseUnitsQuery = "SELECT co.possible_units FROM classes cl, courses co WHERE cl.course_id = co.course_id";
-					PreparedStatement unitsStatement = conn.prepareStatement(courseUnitsQuery);
-					ResultSet possibleUnitsTuple = unitsStatement.executeQuery();
+					int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
+					PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
+					pstmt.setInt(1, course_id);
+					ResultSet courseInfo = pstmt.executeQuery();
+					courseInfo.next();
 					
+					// user specific information
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
+					String gradeMethodSelected = request.getParameter("GRADING_METHOD");
 					
-					// Check that there is a matching row from the query
-					if (possibleUnitsTuple.next()) {
-						String possibleUnits = possibleUnitsTuple.getString("possible_units");
-						// Should get comma-separated values of units					
-						List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+					// course specfic information
+					String possibleUnits = courseInfo.getString("possible_units");
+					String gradeMethod = courseInfo.getString("grading_method");
+					
+					// put unit options into list					
+					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
 						
-						// Check if the user inputted value is valid
-						if (listOfUnits.contains(unitsTaken)) {
-							pstmt.setString(1, request.getParameter("SSN"));
-							pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-							pstmt.setString(3, request.getParameter("CLASS_ID"));
-							pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
-							pstmt.setString(5, request.getParameter("STATUS"));
+					// Check if the user inputted values are valid
+					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
+						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'S', 2022, ?, ?, ?, NULL)");
+						
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+						pstmt.setString(3, request.getParameter("CLASS_ID"));
+						pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
+						pstmt.setString(5, request.getParameter("GRADING_METHOD"));
+						pstmt.setString(6, request.getParameter("STATUS"));
 							
-							pstmt.executeUpdate();
+						pstmt.executeUpdate();
 							
-							conn.commit();
-							conn.setAutoCommit(true);
-						}
-						else {
-							System.out.println("WRONG WRONG WRONG WRONG WRONG WRONG WRONG WRONG WRONG");
-						}
-					}
-					else {
-						System.out.println("No matches");
+						conn.commit();
+						conn.setAutoCommit(true);
+					} else {
+						System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
 					}
 				}
 				
 				// update enroll
 				if (action != null && action.equals("update-enroll")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, status = ? WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = 'S' AND year = 2022;");
 					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-					pstmt.setString(2, request.getParameter("STATUS"));
-					pstmt.setString(3, request.getParameter("SSN"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(5, request.getParameter("CLASS_ID"));
+					int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
+					PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
+					pstmt.setInt(1, course_id);
+					ResultSet courseInfo = pstmt.executeQuery();
+					courseInfo.next();
 					
-					pstmt.executeUpdate();
+					// user specific information
+					String unitsTaken = request.getParameter("UNITS_TAKEN");
+					String gradeMethodSelected = request.getParameter("GRADING_METHOD");
 					
-					conn.commit();
-					conn.setAutoCommit(true);
+					// course specfic information
+					String possibleUnits = courseInfo.getString("possible_units");
+					String gradeMethod = courseInfo.getString("grading_method");
+					
+					// put unit options into list					
+					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+						
+					// Check if the user inputted values are valid
+					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
+						pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, grade_option = ?, status = ? WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = 'S' AND year = 2022;");
+						
+						pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+						pstmt.setString(2, request.getParameter("GRADING_METHOD"));
+						pstmt.setString(3, request.getParameter("STATUS"));
+						pstmt.setString(4, request.getParameter("SSN"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("COURSE_ID")));
+						pstmt.setString(6, request.getParameter("CLASS_ID"));
+							
+						pstmt.executeUpdate();
+							
+						conn.commit();
+						conn.setAutoCommit(true);
+					} else {
+						System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
+					}
 				}
 				
 				// delete enroll
@@ -112,8 +135,10 @@
 						<th>Course ID</th>
 						<th>Class ID</th>
 						<th>Units Taken</th>
+						<th>Grading Method</th>
 						<th>Status</th>
 					</tr>
+					
 					<%--Insert enroll Code--%>
 					<tr>
 						<form action="course_enrollment.jsp" method="get">
@@ -122,6 +147,10 @@
 							<th><input value="" name="COURSE_ID" size="10"></th>
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><select name="STATUS">
 								<option value="enroll">Enroll</option>
 								<option value="waitlist">Waitlist</option>
@@ -129,6 +158,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+					
 					<%--Update enroll Code--%>
 					<tr>
 						<form action="course_enrollment.jsp" method="get">
@@ -137,6 +167,10 @@
 							<th><input value="" name="COURSE_ID" size="10"></th>
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><select name="STATUS">
 								<option value="enroll">Enroll</option>
 								<option value="waitlist">Waitlist</option>
@@ -144,6 +178,7 @@
 							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
+					
 					<%--Delete enroll Code--%>
 					<tr>
 						<form action="course_enrollment.jsp" method="get">
@@ -152,6 +187,10 @@
 							<th><input value="" name="COURSE_ID" size="10"></th>
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADING_METHOD">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><select name="STATUS">
 								<option value="enroll">Enroll</option>
 								<option value="waitlist">Waitlist</option>
@@ -166,10 +205,8 @@
 						<th>Course ID</th>
 						<th>Class ID</th>
 						<th>Units Taken</th>
+						<th>Grading Method</th>
 						<th>Status</th>
-						<th></th>
-						<th></th>
-						<th></th>
 					</tr>
 					
 					<%
@@ -183,6 +220,7 @@
 							<td><%= rset.getString("course_id") %></td>
 							<td><%= rset.getString("class_id") %></td>
 							<td><%= rset.getString("units_taken") %></td>
+							<td><%= rset.getString("grade_option") %></td>
 							<td><%= rset.getString("status") %></td>
 						</tr>
 					<%
