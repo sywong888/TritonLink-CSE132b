@@ -7,6 +7,7 @@
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
+	<%@ page import="java.util.*" %>
 	
 	<table>
 		<tr>
@@ -22,39 +23,91 @@
 				// insert enroll
 				if (action != null && action.equals("insert-enroll")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, ?, ?, ?, 'enroll', ?)");
 					
-					pstmt.setString(1, request.getParameter("SSN"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(3, request.getParameter("CLASS_ID"));
-					pstmt.setString(4, request.getParameter("QUARTER"));
-					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-					pstmt.setString(7, request.getParameter("GRADE"));
+					int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
+					PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
+					pstmt.setInt(1, course_id);
+					ResultSet courseInfo = pstmt.executeQuery();
+					courseInfo.next();
 					
-					pstmt.executeUpdate();
+					// user specific information
+					String unitsTaken = request.getParameter("UNITS_TAKEN");
+					String gradeMethodSelected = request.getParameter("GRADE_OPTION");
 					
-					conn.commit();
-					conn.setAutoCommit(true);
+					// course specfic information
+					String possibleUnits = courseInfo.getString("possible_units");
+					String gradeMethod = courseInfo.getString("grading_method");
+					
+					// put unit options into list					
+					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+						
+					// Check if the user inputted values are valid
+					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
+						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, ?, ?, ?, ?, 'enroll', ?)");
+						
+						pstmt.setString(1, request.getParameter("SSN"));
+						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+						pstmt.setString(3, request.getParameter("CLASS_ID"));
+						pstmt.setString(4, request.getParameter("QUARTER"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
+						pstmt.setInt(6, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+						pstmt.setString(7, request.getParameter("GRADE_OPTION"));
+						pstmt.setString(8, request.getParameter("GRADE"));
+						
+						pstmt.executeUpdate();
+							
+						conn.commit();
+						conn.setAutoCommit(true);
+					} else {
+						System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
+					}
 				}
 				
 				// update enroll
 				if (action != null && action.equals("update-enroll")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, grade = ? WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-					pstmt.setString(2, request.getParameter("GRADE"));
-					pstmt.setString(3, request.getParameter("SSN"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(5, request.getParameter("CLASS_ID"));
-					pstmt.setString(6, request.getParameter("QUARTER"));
-					pstmt.setInt(7, Integer.parseInt(request.getParameter("YEAR")));
+					int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
+					PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
+					pstmt.setInt(1, course_id);
+					ResultSet courseInfo = pstmt.executeQuery();
+					courseInfo.next();
 					
-					pstmt.executeUpdate();
+					// user specific information
+					String unitsTaken = request.getParameter("UNITS_TAKEN");
+					String gradeMethodSelected = request.getParameter("GRADE_OPTION");
+					System.out.println(unitsTaken);
+					System.out.println(gradeMethodSelected);
 					
-					conn.commit();
-					conn.setAutoCommit(true);
+					// course specfic information
+					String possibleUnits = courseInfo.getString("possible_units");
+					String gradeMethod = courseInfo.getString("grading_method");
+					System.out.println(possibleUnits);
+					System.out.println(gradeMethod);
+					
+					// put unit options into list					
+					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+						
+					// Check if the user inputted values are valid
+					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
+						pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, grade_option = ?, grade = ? WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+						
+						pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+						pstmt.setString(2, request.getParameter("GRADE_OPTION"));
+						pstmt.setString(3, request.getParameter("GRADE"));
+						pstmt.setString(4, request.getParameter("SSN"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("COURSE_ID")));
+						pstmt.setString(6, request.getParameter("CLASS_ID"));
+						pstmt.setString(7, request.getParameter("QUARTER"));
+						pstmt.setInt(8, Integer.parseInt(request.getParameter("YEAR")));
+						
+						pstmt.executeUpdate();
+							
+						conn.commit();
+						conn.setAutoCommit(true);
+					} else {
+						System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
+					}
 				}
 				
 				// delete enroll
@@ -84,6 +137,7 @@
 						<th>Quarter</th>
 						<th>Year</th>
 						<th>Units Taken</th>
+						<th>Grade Option</th>
 						<th>Grade</th>
 					</tr>
 					
@@ -101,6 +155,10 @@
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADE_OPTION">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><input value="" name="GRADE" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
@@ -120,6 +178,10 @@
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADE_OPTION">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><input value="" name="GRADE" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
@@ -139,6 +201,10 @@
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
+							<th><select name="GRADE_OPTION">
+								<option value="letter">Letter</option>
+								<option value="s/u">S/U</option>
+							</select></th>
 							<th><input value="" name="GRADE" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
@@ -151,6 +217,7 @@
 						<th>Quarter</th>
 						<th>Year</th>
 						<th>Units Taken</th>
+						<th>Grade Option</th>
 						<th>Grade</th>
 					</tr>
 					<%
@@ -167,6 +234,7 @@
 							<td><%= rset.getString("QUARTER") %></td>
 							<td><%= rset.getString("YEAR") %></td>
 							<td><%= rset.getString("UNITS_TAKEN") %></td>
+							<td><%= rset.getString("GRADE_OPTION") %></td>
 							<td><%= rset.getString("GRADE") %></td>
 						</tr>
 					<%
