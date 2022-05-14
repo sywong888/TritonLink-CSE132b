@@ -52,7 +52,7 @@
 						
 					// Check if the user inputted values are valid
 					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
-						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'S', 2022, ?, ?, ?, NULL)");
+						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'SP', 2022, ?, ?, ?, NULL)");
 						
 						pstmt.setString(1, request.getParameter("SSN"));
 						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));

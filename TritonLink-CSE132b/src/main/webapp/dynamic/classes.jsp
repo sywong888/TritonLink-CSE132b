@@ -179,9 +179,9 @@
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
 							<th><select name="QUARTER">
-								<option value="F">Fall</option>
-								<option value="W">Winter</option>
-								<option value="S">Spring</option>
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
@@ -197,9 +197,9 @@
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
 							<th><select name="QUARTER">
-								<option value="F">Fall</option>
-								<option value="W">Winter</option>
-								<option value="S">Spring</option>
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
@@ -215,9 +215,9 @@
 							<th><input value="" name="CLASS_ID" size="10"></th>
 							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
 							<th><select name="QUARTER">
-								<option value="F">Fall</option>
-								<option value="W">Winter</option>
-								<option value="S">Spring</option>
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
