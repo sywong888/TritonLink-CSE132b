@@ -14,7 +14,9 @@
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
 
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				
 				
 				String action = request.getParameter("action");
 				
@@ -92,10 +94,12 @@
 				if (action != null && action.equals("update-on")) {
 					conn.setAutoCommit(false);
 					
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE on_probation SET reason = ?, date = ? WHERE ssn = ?;"));
-					pstmt.setString(1, request.getParameter("REASON"));
-					pstmt.setString(2, request.getParameter("DATE"));
+					PreparedStatement pstmt = conn.prepareStatement(("UPDATE on_probation SET reason = ?, date = ? WHERE ssn = ? AND reason = ? AND date = ?;"));
+					pstmt.setString(1, request.getParameter("NEW_REASON"));
+					pstmt.setString(2, request.getParameter("NEW_DATE"));
 					pstmt.setString(3, request.getParameter("SSN"));
+					pstmt.setString(4, request.getParameter("REASON"));
+					pstmt.setString(5, request.getParameter("DATE"));					
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -190,10 +194,30 @@
 							<input type="hidden" value="insert-on" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="REASON" size="10"></th>
-							<th><input value="" name="DATE" size="10"></th>
+							<th><input value="" name="DATE" size="10"></th>					
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
+				
+					
+					<%--Delete on_probation Code--%>
+					<tr>
+						<form action="probation.jsp" method="get">
+							<input type="hidden" value="delete-on" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="REASON" size="10"></th>
+							<th><input value="" name="DATE" size="10"></th>							
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					
+					<tr>
+						<th>SSN</th>
+						<th>Reason</th>
+						<th>Date</th>
+						<th>New Reason</th>
+						<th>New Date</th>
+					</tr>					
 					
 					<%--Update on_probation Code--%>
 					<tr>
@@ -202,20 +226,11 @@
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="REASON" size="10"></th>
 							<th><input value="" name="DATE" size="10"></th>
+							<th><input value="" name="NEW_REASON" size="10"></th>
+							<th><input value="" name="NEW_DATE" size="10"></th>	
 							<th><input type="submit" value="Update"></th>
 						</form>
-					</tr>
-					
-					<%--Delete on_probation Code--%>
-					<tr>
-						<form action="probation.jsp" method="get">
-							<input type="hidden" value="delete-on" name="action">
-							<th><input value="" name="SSN" size="10"></th>
-							<th><input value="" name="REASON" size="10"></th>
-							<th><input value="" name="DATE" size="10"></th>
-							<th><input type="submit" value="Delete"></th>
-						</form>
-					</tr>
+					</tr>					
 					
 					<tr>
 						<th>SSN</th>
