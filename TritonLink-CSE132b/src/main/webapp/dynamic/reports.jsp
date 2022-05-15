@@ -22,19 +22,41 @@
 				
 				/* Reports I a */
 				
-				// HTML select for students enrolled in the current quarter
-				PreparedStatement pstmt = conn.prepareStatement("SELECT distinct s.ssn FROM student s, enroll e WHERE s.ssn = e.ssn AND e.quarter = 'SP' AND e.year = 2022;");
-				ResultSet rset = pstmt.executeQuery();
-				ArrayList<String> currentStudents = new ArrayList<>();
-				while (rset.next()) {
-					currentStudents.add(rset.getString("ssn"));
-				}
-				rset.close();
 				%>
-
-				<%--Presentation Code--%>
 				<h3>Report I</h3>
 				<h4>a)</h4>
+				<h4>Students enrolled in the current quarter:</h4>
+				<%
+				
+				// HTML select for students enrolled in the current quarter
+				PreparedStatement currentStudentStmt = conn.prepareStatement("SELECT distinct s.ssn, s.first_name, s. middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND e.quarter = 'SP' AND e.year = 2022;");
+				ResultSet currentStudentRset = currentStudentStmt.executeQuery();
+				ArrayList<String> currentStudents = new ArrayList<>();
+				
+				while (currentStudentRset.next()) {
+					currentStudents.add(currentStudentRset.getString("ssn"));
+					%>
+					<%--Display information for student currently enrolled--%>
+					<table>
+						<tr>
+							<th>SSN</th>	
+							<th>First Name</th>
+							<th>Middle Name</th>
+							<th>Last Name</th>
+						</tr>
+						<tr>
+							<td><%= currentStudentRset.getString("ssn") %></td>
+							<td><%= currentStudentRset.getString("first_name") %></td>
+							<td><%= currentStudentRset.getString("middle_name") %></td>
+							<td><%= currentStudentRset.getString("last_name") %></td>
+						</tr>
+					</table>
+					<%
+				}
+				currentStudentRset.close();
+				%>
+
+				<%--HTML SELECT for student currently enrolled--%>
 				<table>
 					<tr>
 						<th>Select student enrolled in current quarter:</th>	
@@ -118,20 +140,40 @@
 				</table>
 				
 				<% 
+				
 				/* Reports I c */
+				%>
+				<h4>c)</h4>
+				<h4>All students ever enrolled:</h4>
+				<%
 				
 				// HTML select for all students ever enrolled
-				PreparedStatement enrollStmt = conn.prepareStatement("SELECT distinct ssn FROM enroll;");
+				PreparedStatement enrollStmt = conn.prepareStatement("SELECT distinct s.ssn, s.first_name, s.middle_name, s.last_name FROM enroll e, student s WHERE s.ssn = e.ssn;");
 				ResultSet enrollRset = enrollStmt.executeQuery();
 				ArrayList<String> allEnroll = new ArrayList<>();
 				while (enrollRset.next()) {
 					allEnroll.add(enrollRset.getString("ssn"));
+					%>
+					<%--Display information for all students ever enrolled--%>
+					<table>
+						<tr>
+							<th>SSN</th>	
+							<th>First Name</th>
+							<th>Middle Name</th>
+							<th>Last Name</th>
+						</tr>
+						<tr>
+							<td><%= enrollRset.getString("ssn") %></td>
+							<td><%= enrollRset.getString("first_name") %></td>
+							<td><%= enrollRset.getString("middle_name") %></td>
+							<td><%= enrollRset.getString("last_name") %></td>
+						</tr>
+					</table>
+					<%
 				}
 				enrollRset.close();
 				%>
 				
-				<%--Presentation Code--%>
-				<h4>c)</h4>
 				<table>
 					<%--Report I c--%>
 					<tr>
@@ -231,19 +273,39 @@
 					}
 					%>
 				</table>
-				
-				
 				<% 
-				/* Reports I d */
 				
-				// HTML select for students enrolled in the current quarter
-				PreparedStatement selectId1 = conn.prepareStatement("SELECT e.ssn FROM student s, enroll e WHERE s.ssn = e.ssn AND (s.student_type = 'bsc' OR s.student_type = 'ba') AND e.quarter = 'SP' AND e.year = 2022;");
-				ResultSet rsetId1 = selectId1.executeQuery();
+				/* Reports I d */
+				%>
+				<h4>d)</h4>
+				<h4>All undergraduates currently enrolled:</h4>
+				<%
+				
+				// HTML select for undergraduates enrolled in the current quarter
+				PreparedStatement currentUndergradStmt = conn.prepareStatement("SELECT e.ssn, s.first_name, s.middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND (s.student_type = 'bsc' OR s.student_type = 'ba') AND e.quarter = 'SP' AND e.year = 2022;");
+				ResultSet currentUndergradRset = currentUndergradStmt.executeQuery();
 				ArrayList<String> currentUndergrads = new ArrayList<>();
-				while (rsetId1.next()) {
-					currentUndergrads.add(rsetId1.getString("ssn"));
+				while (currentUndergradRset.next()) {
+					currentUndergrads.add(currentUndergradRset.getString("ssn"));
+					%>
+					<%--Display information for all undergraduates currently enrolled--%>
+					<table>
+						<tr>
+							<th>SSN</th>	
+							<th>First Name</th>
+							<th>Middle Name</th>
+							<th>Last Name</th>
+						</tr>
+						<tr>
+							<td><%= currentUndergradRset.getString("ssn") %></td>
+							<td><%= currentUndergradRset.getString("first_name") %></td>
+							<td><%= currentUndergradRset.getString("middle_name") %></td>
+							<td><%= currentUndergradRset.getString("last_name") %></td>
+						</tr>
+					</table>
+					<%
 				}
-				rsetId1.close();
+				currentUndergradRset.close();
 				
 				// PreparedStatement selectId2 = conn.prepareStatement("SELECT d.dname FROM ucsd_degree u, department d WHERE degree_type = 'bsc' AND u.dno = d.dno;");
 				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'bsc';");
@@ -252,12 +314,11 @@
 				while (rsetId2.next()) {
 					// bscDegrees.add(rsetId2.getString("dname"));
 					bscDegrees.add(rsetId2.getString("degree_number"));
+					
 				}
 				rsetId2.close();
 				%>
-				
-				<%--Presentation Code--%>
-				<h4>d)</h4>
+			
 				<table>
 					<%--Report I d--%>
 					<tr>
@@ -304,7 +365,6 @@
 						}
 						unitRset.close();
 						
-						// PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), WITH coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), WITH unitsTakenPerCategory AS (SELECT category, SUM(units_taken) AS takenUnits FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY category) SELECT category, u.number_units - ut.takenUnits AS units_left FROM unitsPerCategory u, unitsTakenPerCategory ut WHERE u.category = b.category;");
 						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS takenUnits FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category) (SELECT ut.category, u.number_units - ut.takenUnits AS units_left FROM unitsPerCategory u, unitsTakenPerCategory ut WHERE u.category = ut.category);");
 						unitsLeft.setInt(1, Integer.parseInt(dname));
  						unitsLeft.setString(2, ssn);
@@ -325,7 +385,19 @@
 					}
 					%>
 				</table>
+				<%
 				
+				/* Reports I e */
+				%>
+				<h4>d)</h4>
+				<h4>All master's students currently enrolled:</h4>
+				<%
+				
+				// HTML select for master's students enrolled in the current quarter
+				PreparedStatement currentMastersStmt = conn.prepareStatement("SELECT e.ssn, s.first_name, s.middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND s.student_type = 'masters' AND e.quarter = 'SP' AND e.year = 2022;");
+				ResultSet currentMastersRset = currentMastersStmt.executeQuery();
+				ArrayList<String> currentMasters = new ArrayList<>();
+				%>
 				
 			</td>
 		</tr>	

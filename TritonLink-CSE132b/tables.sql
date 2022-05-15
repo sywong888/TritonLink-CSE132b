@@ -25,3 +25,14 @@ CREATE TABLE student_organization (org_id integer, name varchar(255), yearly_bud
 CREATE TABLE student_organization_participation (org_id integer, ssn char(9), position varchar(255), PRIMARY KEY (org_id, ssn, position), FOREIGN KEY (ssn) REFERENCES student(ssn), FOREIGN KEY (org_id) REFERENCES student_organization(org_id));
 CREATE TABLE company (name varchar(255), org_id integer, PRIMARY KEY (name, org_id), FOREIGN KEY (org_id) REFERENCES student_organization (org_id));
 CREATE TABLE event (org_id integer, title varchar(255), date varchar(255), time varchar(255), location varchar(255), PRIMARY KEY (org_id, title, date), FOREIGN KEY (org_id) REFERENCES student_organization (org_id));
+create table GRADE_CONVERSION(LETTER_GRADE CHAR(2) NOT NULL, NUMBER_GRADE DECIMAL(2,1));
+insert into grade_conversion values('A+', 4.3);
+insert into grade_conversion values('A', 4);
+insert into grade_conversion values('A-', 3.7);
+insert into grade_conversion values('B+', 3.4);
+insert into grade_conversion values('B', 3.1);
+insert into grade_conversion values('B-', 2.8);
+insert into grade_conversion values('C+', 2.5);
+insert into grade_conversion values('C', 2.2);
+insert into grade_conversion values('C-', 1.9);
+insert into grade_conversion values('D', 1.6);

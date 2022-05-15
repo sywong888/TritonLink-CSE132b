@@ -8,4 +8,4 @@ Undergraduate:
 - added type attribute for bsc and ba
 
 Enroll:  
-- changed unit_taken attribute to integer to allow sum in query
+- changed units_taken attribute to integer to allow sum in query
