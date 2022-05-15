@@ -399,6 +399,13 @@
 				ArrayList<String> currentMasters = new ArrayList<>();
 				%>
 				
+				<%
+				/* Reports I e */
+				%>
+				<h3>Report II</h3>
+				<h4>d)</h4>
+				<h4>All master's students currently enrolled:</h4>
+				
 			</td>
 		</tr>	
 	</table>

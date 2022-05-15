@@ -9,3 +9,7 @@ Undergraduate:
 
 Enroll:  
 - changed units_taken attribute to integer to allow sum in query
+
+Meeting:  
+- new start_time and end_time attributes  
+- TODO: java code to make sure start is before end

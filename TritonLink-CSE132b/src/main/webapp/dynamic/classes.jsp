@@ -13,8 +13,8 @@
 			<td>
 				<% 
 				DriverManager.registerDriver(new org.postgresql.Driver());
-				// Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
-				Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
+				Connection conn = DriverManager.getConnection("jdbc:postgresql:tritonlink?user=postgres&password=Beartown123!");
+				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
 				
@@ -104,11 +104,11 @@
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.setString(5, request.getParameter("DAY"));
-					pstmt.setString(6, request.getParameter("TIME"));
-					pstmt.setString(7, request.getParameter("ROOM"));
-					pstmt.setString(8, request.getParameter("TYPE"));
-					pstmt.setString(9, request.getParameter("MANDATORY"));
-					pstmt.setInt(10, Integer.parseInt(request.getParameter("DURATION")));
+					pstmt.setString(6, request.getParameter("START_TIME"));
+					pstmt.setString(7, request.getParameter("END_TIME"));
+					pstmt.setString(8, request.getParameter("ROOM"));
+					pstmt.setString(9, request.getParameter("TYPE"));
+					pstmt.setString(10, request.getParameter("MANDATORY"));
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -118,16 +118,16 @@
 				// update meeting
 				if (action != null && action.equals("update-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE meeting SET mandatory = ?, duration = ?WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND time = ? AND room = ? AND type = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE meeting SET mandatory = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
 					
 					pstmt.setString(1, request.getParameter("MANDATORY"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("DURATION")));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(4, request.getParameter("CLASS_ID"));
-					pstmt.setString(5, request.getParameter("QUARTER"));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(7, request.getParameter("DAY"));
-					pstmt.setString(8, request.getParameter("TIME"));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(3, request.getParameter("CLASS_ID"));
+					pstmt.setString(4, request.getParameter("QUARTER"));
+					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(6, request.getParameter("DAY"));
+					pstmt.setString(7, request.getParameter("START_TIME"));
+					pstmt.setString(8, request.getParameter("END_TIME"));
 					pstmt.setString(9, request.getParameter("ROOM"));
 					pstmt.setString(10, request.getParameter("TYPE"));
 					
@@ -140,16 +140,17 @@
 				// delete meeting
 				if (action != null && action.equals("delete-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND time = ? AND room = ? AND type = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.setString(5, request.getParameter("DAY"));
-					pstmt.setString(6, request.getParameter("TIME"));
-					pstmt.setString(7, request.getParameter("ROOM"));
-					pstmt.setString(8, request.getParameter("TYPE"));
+					pstmt.setString(6, request.getParameter("START_TIME"));
+					pstmt.setString(7, request.getParameter("END_TIME"));
+					pstmt.setString(8, request.getParameter("ROOM"));
+					pstmt.setString(9, request.getParameter("TYPE"));
 					
 					pstmt.executeUpdate();
 					
@@ -266,11 +267,11 @@
 						<th>Quarter</th>
 						<th>Year</th>
 						<th>Day</th>
-						<th>Time</th>
+						<th>Start Time</th>
+						<th>End Time</th>
 						<th>Room</th>
 						<th>Type</th>
 						<th>Mandatory</th>
-						<th>Duration</th>
 					</tr>
 					<%--Insert meeting Code--%>
 					<tr>
@@ -285,7 +286,8 @@
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="DAY" size="10"></th>
-							<th><input value="" name="TIME" size="10"></th>
+							<th><input value="" name="START_TIME" size="10"></th>
+							<th><input value="" name="END_TIME" size="10"></th>
 							<th><input value="" name="ROOM" size="10"></th>
 							<th><select name="TYPE">
 								<option value="lecture">Lecture</option>
@@ -295,9 +297,37 @@
 							<th><select name="MANDATORY">
 								<option value="y">Yes</option>
 								<option value="n">No</option>
-							</select></th>
-							<th><input value="" name="DURATION" size="10"></th>																					
+							</select></th>																				
 							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+					
+					<%--Update meeting Code--%>
+					<tr>
+						<form action="classes.jsp" method="get">
+							<input type="hidden" value="update-meeting" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><select name="QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="DAY" size="10"></th>
+							<th><input value="" name="START_TIME" size="10"></th>
+							<th><input value="" name="END_TIME" size="10"></th>
+							<th><input value="" name="ROOM" size="10"></th>
+							<th><select name="TYPE">
+								<option value="lecture">Lecture</option>
+								<option value="discussion">Discussion</option>
+								<option value="lab">Lab</option>
+							</select></th>
+							<th><select name="MANDATORY">
+								<option value="y">Yes</option>
+								<option value="n">No</option>
+							</select></th>																							
+							<th><input type="submit" value="Update"></th>
 						</form>
 					</tr>
 					
@@ -314,7 +344,8 @@
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
 							<th><input value="" name="DAY" size="10"></th>
-							<th><input value="" name="TIME" size="10"></th>
+							<th><input value="" name="START_TIME" size="10"></th>
+							<th><input value="" name="END_TIME" size="10"></th>
 							<th><input value="" name="ROOM" size="10"></th>
 							<th><select name="TYPE">
 								<option value="lecture">Lecture</option>
@@ -324,56 +355,11 @@
 							<th><select name="MANDATORY">
 								<option value="y">Yes</option>
 								<option value="n">No</option>
-							</select></th>
-							<th><input value="" name="DURATION" size="10"></th>																					
+							</select></th>																				
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>					
 					
-					<tr>
-						<th>Course ID</th>
-						<th>Class ID</th>
-						<th>Quarter</th>
-						<th>Year</th>
-						<th>Day</th>
-						<th>Time</th>
-						<th>Room</th>
-						<th>Type</th>
-						<th>Mandatory</th>
-						<th>Duration</th>
-						<th>New Duration</th>
-					</tr>
-					
-					<%--Update meeting Code--%>
-					<tr>
-						<form action="classes.jsp" method="get">
-							<input type="hidden" value="update-meeting" name="action">
-							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><select name="QUARTER">
-								<option value="FA">Fall</option>
-								<option value="WI">Winter</option>
-								<option value="SP">Spring</option>
-							</select></th>
-							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="DAY" size="10"></th>
-							<th><input value="" name="TIME" size="10"></th>
-							<th><input value="" name="ROOM" size="10"></th>
-							<th><select name="TYPE">
-								<option value="lecture">Lecture</option>
-								<option value="discussion">Discussion</option>
-								<option value="lab">Lab</option>
-							</select></th>
-							<th><select name="MANDATORY">
-								<option value="y">Yes</option>
-								<option value="n">No</option>
-							</select></th>
-							<th><input value="" name="DURATION" size="10"></th>	
-							<th><input value="" name="NEW_DURATION" size="10"></th>																								
-							<th><input type="submit" value="Update"></th>
-						</form>
-					</tr>
-
 					<!-- Reading in all classes -->
 					<tr>
 						<th>Course ID</th>
@@ -381,11 +367,11 @@
 						<th>Quarter</th>
 						<th>Year</th>
 						<th>Day</th>
-						<th>Time</th>
+						<th>Start Time</th>
+						<th>End Time</th>
 						<th>Room</th>
 						<th>Type</th>
 						<th>Mandatory</th>
-						<th>Duration</th>
 					</tr>
 					
 					<%
@@ -400,11 +386,11 @@
 							<td><%= rset.getString("quarter") %></td>
 							<td><%= rset.getString("year") %></td>
 							<td><%= rset.getString("day") %></td>
-							<td><%= rset.getString("time") %></td>
+							<td><%= rset.getString("start_time") %></td>
+							<td><%= rset.getString("end_time") %></td>
 							<td><%= rset.getString("room") %></td>
 							<td><%= rset.getString("type") %></td>
 							<td><%= rset.getString("mandatory") %></td>
-							<td><%= rset.getString("duration") %></td>							
 						</tr>
 					<%
 					}
