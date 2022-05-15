@@ -400,11 +400,88 @@
 				%>
 				
 				<%
-				/* Reports I e */
+				/* Reports II a */
 				%>
 				<h3>Report II</h3>
-				<h4>d)</h4>
-				<h4>All master's students currently enrolled:</h4>
+				<h4>a)</h4>
+				<h4>Students enrolled in the current quarter:</h4>
+				<table>
+					<tr>
+						<th>SSN</th>	
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+					</tr>
+				<%
+				
+				// HTML select for students enrolled in the current quarter
+				PreparedStatement currentStudentsStmt2 = conn.prepareStatement("SELECT distinct s.ssn, s.first_name, s. middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND e.quarter = 'SP' AND e.year = 2022;");
+				ResultSet currentStudents2Rset = currentStudentsStmt2.executeQuery();
+				ArrayList<String> currentStudents2 = new ArrayList<>();
+				
+				while (currentStudents2Rset.next()) {
+					currentStudents2.add(currentStudents2Rset.getString("ssn"));
+					%>
+					<%--Display information for student currently enrolled--%>
+						<tr>
+							<td><%= currentStudents2Rset.getString("ssn") %></td>
+							<td><%= currentStudents2Rset.getString("first_name") %></td>
+							<td><%= currentStudents2Rset.getString("middle_name") %></td>
+							<td><%= currentStudents2Rset.getString("last_name") %></td>
+						</tr>
+					</table>
+					<%
+				}
+				currentStudents2Rset.close();
+				%>
+				
+				<%--HTML SELECT for student currently enrolled--%>
+				<table>
+					<tr>
+						<th>Select student enrolled in current quarter:</th>	
+					</tr>
+					
+					<%--Report I a--%>
+					<tr>
+						<form action="reports.jsp" method="get">
+							<input type="hidden" value="select-report-II-a" name="action">							<th><select name="SSN">
+								<%  for(String ssn: currentStudents2) { %>
+  									 <option value="<%=ssn%>"><%=ssn%></option>
+  								<% } %>
+							</select></th>
+							<th><input type="submit" value="Submit"></th>
+						</form>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<th>Course ID</th>	
+						<th>Class ID</th>
+					</tr>
+					<% 
+					if (action != null && action.equals("select-report-II-a")) {
+						conn.setAutoCommit(false);
+						String ssn = request.getParameter("SSN");
+						
+						PreparedStatement conflictStmt = conn.prepareStatement("WITH enrolled_meetings AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM enroll e, meeting m WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM meeting m WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time AND em.course_id = m.course_id AND em.class_id = m.class_id)), no_conflicts AS (SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id FROM meeting_options mo, enrolled_meetings em WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day) SELECT DISTINCT mo.course_id, mo.class_id FROM meeting_options mo WHERE NOT EXISTS (SELECT * FROM no_conflicts nc WHERE mo.day = nc.day AND mo.start_time = nc.start_time AND mo.end_time = nc.end_time AND mo.course_id = nc.course_id AND mo.class_id = nc.class_id) EXCEPT SELECT DISTINCT nc.course_id, nc.class_id FROM no_conflicts nc;");
+						conflictStmt.setString(1, ssn);
+						ResultSet conflictRset = conflictStmt.executeQuery();
+						
+						while (conflictRset.next()) {
+							%>
+							<tr>
+								<td><%= conflictRset.getString("course_id") %></td>
+								<td><%= conflictRset.getString("class_id") %></td>
+							</tr>
+							<%
+						}
+						
+						conflictRset.close();
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+					%>
+				</table>
 				
 			</td>
 		</tr>	
