@@ -40,8 +40,9 @@
 					// pstmt for student type specific tables
 					String studentType = request.getParameter("STUDENT_TYPE");
 					
- 					if (studentType.equals("undergraduate")) {
-						pstmt = conn.prepareStatement(("INSERT INTO undergraduate (ssn) VALUES (?);"));
+ 					if (studentType.equals("bsc") || studentType.equals("ba")) {
+						pstmt = conn.prepareStatement("INSERT INTO undergraduate (ssn, type) VALUES (?, ?);");
+						pstmt.setString(2, studentType);
 					} else if (studentType.equals("masters")) {
 						pstmt = conn.prepareStatement(("INSERT INTO masters (ssn) VALUES (?);"));
 					} else {
@@ -87,8 +88,9 @@
 					
 					// pstmt for student type specific tables
 					String studentType = request.getParameter("STUDENT_TYPE");
- 					if (studentType.equals("undergraduate")) {
-						pstmt = conn.prepareStatement("INSERT INTO undergraduate (ssn) VALUES (?);");
+ 					if (studentType.equals("bsc") || studentType.equals("ba")) {
+						pstmt = conn.prepareStatement("INSERT INTO undergraduate (ssn, type) VALUES (?, ?);");
+						pstmt.setString(2, studentType);
 					} else if (studentType.equals("masters")) {
 						pstmt = conn.prepareStatement("INSERT INTO masters (ssn) VALUES (?);");
 					} else {
@@ -316,13 +318,19 @@
 				// update undergraduate
 				if (action != null && action.equals("update-undergraduate")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement(("UPDATE undergraduate SET major = ?, minor = ?, college = ? WHERE ssn = ?;"));
 					
-					pstmt.setString(1, request.getParameter("MAJOR"));
-					pstmt.setString(2, request.getParameter("MINOR"));
-					pstmt.setString(3, request.getParameter("COLLEGE"));
-					pstmt.setString(4, request.getParameter("SSN"));
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE undergraduate SET type = ?, major = ?, minor = ?, college = ? WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("TYPE"));
+					pstmt.setString(2, request.getParameter("MAJOR"));
+					pstmt.setString(3, request.getParameter("MINOR"));
+					pstmt.setString(4, request.getParameter("COLLEGE"));
+					pstmt.setString(5, request.getParameter("SSN"));
+					pstmt.executeUpdate();
 					
+					// update student too
+					pstmt = conn.prepareStatement("UPDATE student SET student_type = ? WHERE ssn = ?;");
+					pstmt.setString(1, request.getParameter("TYPE"));
+					pstmt.setString(2, request.getParameter("SSN"));
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -527,7 +535,8 @@
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="STUDENT_ID" size="10"></th>
 							<th><select name="STUDENT_TYPE">
-								<option value="undergraduate">Undergraduate</option>
+								<option value="bsc">Bachelor of Science</option>
+								<option value="ba">Bachelor of Arts</option>
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
 							</select></th>
@@ -559,7 +568,8 @@
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="STUDENT_ID" size="10"></th>
 							<th><select name="STUDENT_TYPE">
-								<option value="undergraduate">Undergraduate</option>
+								<option value="bsc">Bachelor of Science</option>
+								<option value="ba">Bachelor of Arts</option>
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
 							</select></th>
@@ -591,7 +601,8 @@
 							<th><input value="" name="LAST_NAME" size="10"></th>
 							<th><input value="" name="STUDENT_ID" size="10"></th>
 							<th><select name="STUDENT_TYPE">
-								<option value="undergraduate">Undergraduate</option>
+								<option value="bsc">Bachelor of Science</option>
+								<option value="ba">Bachelor of Arts</option>
 								<option value="masters">Master's</option>
 								<option value="phd">PhD</option>
 							</select></th>
@@ -807,6 +818,7 @@
 				<table>
 					<tr>
 						<th>SSN</th>
+						<th>Type</th>
 						<th>Major</th>
 						<th>Minor</th>
 						<th>College</th>
@@ -817,6 +829,10 @@
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="update-undergraduate" name="action">
 							<th><input value="" name="SSN" size="10"></th>
+							<th><select name="TYPE">
+								<option value="bsc">Bachelor of Science</option>
+								<option value="ba">Bachelor of Arts</option>
+							</select></th>
 							<th><input value="" name="MAJOR" size="10"></th>
 							<th><input value="" name="MINOR" size="10"></th>
 							<th><select name="COLLEGE">
@@ -837,6 +853,10 @@
 						<form action="student.jsp" method="get">
 							<input type="hidden" value="delete-undergraduate" name="action">
 							<th><input value="" name="SSN" size="10"></th>
+							<th><select name="TYPE">
+								<option value="bsc">Bachelor of Science</option>
+								<option value="ba">Bachelor of Arts</option>
+							</select></th>
 							<th><input value="" name="MAJOR" size="10"></th>
 							<th><input value="" name="MINOR" size="10"></th>
 							<th><select name="COLLEGE">
@@ -854,6 +874,7 @@
 					
 					<tr>
 						<th>SSN</th>
+						<th>Type</th>
 						<th>Major</th>
 						<th>Minor</th>
 						<th>College</th>
@@ -866,10 +887,11 @@
 					%>
 						
 						<tr>
-							<td><%= rset.getString("SSN") %></td>
-							<td><%= rset.getString("MAJOR") %></td>
-							<td><%= rset.getString("MINOR") %></td>
-							<td><%= rset.getString("COLLEGE") %></td>
+							<td><%= rset.getString("ssn") %></td>
+							<td><%= rset.getString("type") %></td>
+							<td><%= rset.getString("major") %></td>
+							<td><%= rset.getString("minor") %></td>
+							<td><%= rset.getString("college") %></td>
 						</tr>
 					<%
 					}

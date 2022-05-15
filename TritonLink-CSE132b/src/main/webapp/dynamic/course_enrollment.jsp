@@ -41,7 +41,7 @@
 					
 					// user specific information
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
-					String gradeMethodSelected = request.getParameter("GRADING_METHOD");
+					String gradeMethodSelected = String.valueOf(request.getParameter("GRADING_METHOD"));
 					
 					// course specfic information
 					String possibleUnits = courseInfo.getString("possible_units");
@@ -57,7 +57,7 @@
 						pstmt.setString(1, request.getParameter("SSN"));
 						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
 						pstmt.setString(3, request.getParameter("CLASS_ID"));
-						pstmt.setString(4, request.getParameter("UNITS_TAKEN"));
+						pstmt.setInt(4, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
 						pstmt.setString(5, request.getParameter("GRADING_METHOD"));
 						pstmt.setString(6, request.getParameter("STATUS"));
 							
@@ -82,7 +82,7 @@
 					
 					// user specific information
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
-					String gradeMethodSelected = request.getParameter("GRADING_METHOD");
+					String gradeMethodSelected = String.valueOf(request.getParameter("GRADING_METHOD"));
 					
 					// course specfic information
 					String possibleUnits = courseInfo.getString("possible_units");

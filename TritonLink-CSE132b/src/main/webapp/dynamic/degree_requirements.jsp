@@ -22,16 +22,17 @@
 				// insert ucsd_degree
 				if (action != null && action.equals("insert-degree")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO ucsd_degree VALUES (?, ?, ?, ?);");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO ucsd_degree VALUES (?, ?, ?, ?, ?);");
 					
-					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
+					pstmt.setString(2, request.getParameter("DEGREE_TYPE"));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("DNO")));
 					if (request.getParameter("CONCENTRATION") == null) {
-						pstmt.setString(3, "");
+						pstmt.setString(4, "");
 					} else {
-						pstmt.setString(3, request.getParameter("CONCENTRATION"));
+						pstmt.setString(4, request.getParameter("CONCENTRATION"));
 					}
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("TOTAL_UNITS")));
+					pstmt.setInt(5, Integer.parseInt(request.getParameter("TOTAL_UNITS")));
 					
 					pstmt.executeUpdate();
 					
@@ -42,12 +43,17 @@
 				// update ucsd_degree
 				if (action != null && action.equals("update-degree")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE ucsd_degree SET total_units = ? WHERE degree_type = ? AND dno = ? AND concentration = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE ucsd_degree SET degree_type = ?, dno = ?, concentration = ?, total_units = ? WHERE degree_number = ?;");
 					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("TOTAL_UNITS")));
-					pstmt.setString(2, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("DNO")));
-					pstmt.setString(4, request.getParameter("CONCENTRATION"));
+					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
+					if (request.getParameter("CONCENTRATION") == null) {
+						pstmt.setString(3, "");
+					} else {
+						pstmt.setString(3, request.getParameter("CONCENTRATION"));
+					}
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("TOTAL_UNITS")));
+					pstmt.setInt(5, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
 					
 					pstmt.executeUpdate();
 					
@@ -60,16 +66,12 @@
 					conn.setAutoCommit(false);
 					
 					// delete from degree_requirement to avoid foreign key violations
- 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM degree_requirement WHERE degree_type = ? AND dno = ? AND concentration = ?;");
- 					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
-					pstmt.setString(3, request.getParameter("CONCENTRATION"));
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM degree_requirement WHERE degree_number = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
  					pstmt.executeUpdate();
  					
-					pstmt = conn.prepareStatement("DELETE FROM ucsd_degree WHERE degree_type = ? AND dno = ? AND concentration = ?;");
-					pstmt.setString(1, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(2, Integer.parseInt(request.getParameter("DNO")));
-					pstmt.setString(3, request.getParameter("CONCENTRATION"));
+					pstmt = conn.prepareStatement("DELETE FROM ucsd_degree WHERE degree_number = ?;");
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
 
 					pstmt.executeUpdate();
 					
@@ -80,18 +82,12 @@
 				// insert requirement
 				if (action != null && action.equals("insert-requirement")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO degree_requirement VALUES (?, ?, ?, ?, ?, ?);");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO degree_requirement VALUES (?, ?, ?, ?);");
 					
 					pstmt.setString(1, request.getParameter("CATEGORY"));
-					pstmt.setString(2, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("DNO")));
-					if (request.getParameter("CONCENTRATION") == null) {
-						pstmt.setString(4, "");
-					} else {
-						pstmt.setString(4, request.getParameter("CONCENTRATION"));
-					}
-					pstmt.setInt(5, Integer.parseInt(request.getParameter("UNITS")));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("AVERAGE")));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("UNITS")));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("AVERAGE")));
 					
 					pstmt.executeUpdate();
 					
@@ -102,18 +98,12 @@
 				// update degree_requirement
 				if (action != null && action.equals("update-requirement")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE degree_requirement SET number_units = ?, required_average = ? WHERE category = ? AND degree_type = ? AND dno = ? AND concentration = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE degree_requirement SET number_units = ?, required_average = ? WHERE category = ? AND degree_number = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS")));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("AVERAGE")));
 					pstmt.setString(3, request.getParameter("CATEGORY"));
-					pstmt.setString(4, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(5, Integer.parseInt(request.getParameter("DNO")));
-					if (request.getParameter("CONCENTRATION") == null) {
-						pstmt.setString(6, "");
-					} else {
-						pstmt.setString(6, request.getParameter("CONCENTRATION"));
-					}
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
 					
 					pstmt.executeUpdate();
 					
@@ -124,17 +114,41 @@
 				// delete degree_requirement
 				if (action != null && action.equals("delete-requirement")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM degree_requirement WHERE category = ? AND degree_type = ? AND dno = ? AND concentration = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM degree_requirement WHERE category = ? AND degree_number = ?;");
 					
 					pstmt.setString(1, request.getParameter("CATEGORY"));
-					pstmt.setString(2, request.getParameter("DEGREE_TYPE"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("DNO")));
-					if (request.getParameter("CONCENTRATION") == null) {
-						pstmt.setString(4, "");
-					} else {
-						pstmt.setString(4, request.getParameter("CONCENTRATION"));
-					}
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
 
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// insert category_requirements
+				if (action != null && action.equals("insert-category")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO category_requirements VALUES (?, ?, ?);");
+					
+					pstmt.setString(1, request.getParameter("CATEGORY"));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// delet category_requirements
+				if (action != null && action.equals("delete-category")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM category_requirements WHERE category = ? AND degree_number = ? AND course_id = ?;");
+					
+					pstmt.setString(1, request.getParameter("CATEGORY"));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("DEGREE_NUMBER")));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
+					
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -203,6 +217,7 @@
 				<h3>Create Degree Form</h3>
 				<table>
 					<tr>
+						<th>Degree Number</th>
 						<th>Degree Type</th>
 						<th>Department Number</th>
 						<th>Concentration</th>
@@ -212,10 +227,12 @@
 					<tr>
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="insert-degree" name="action">
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
+								<option value="bsc">BSC</option>
+								<option value="ba">BA</option>
+								<option value="masters">MS</option>
+								<option value="phd">PhD</option>
 							</select></th>
 							<th><input value="" name="DNO" size="10"></th>
 							<th><input value="" name="CONCENTRATION" size="10"></th>
@@ -227,10 +244,12 @@
 					<tr>
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="update-degree" name="action">
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
+								<option value="bsc">BSC</option>
+								<option value="ba">BA</option>
+								<option value="masters">MS</option>
+								<option value="phd">PhD</option>
 							</select></th>
 							<th><input value="" name="DNO" size="10"></th>
 							<th><input value="" name="CONCENTRATION" size="10"></th>
@@ -242,10 +261,12 @@
 					<tr>
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="delete-degree" name="action">
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
+								<option value="bsc">BSC</option>
+								<option value="ba">BA</option>
+								<option value="masters">MS</option>
+								<option value="phd">PhD</option>
 							</select></th>
 							<th><input value="" name="DNO" size="10"></th>
 							<th><input value="" name="CONCENTRATION" size="10"></th>
@@ -256,6 +277,7 @@
 					
 					<!-- Reading in all UCSD degrees-->
 					<tr>
+						<th>Degree Number</th>
 						<th>Degree Type</th>
 						<th>Department Number</th>
 						<th>Concentration</th>
@@ -269,6 +291,7 @@
 					while (rset.next()) {
 					%>
 						<tr>
+							<td><%= rset.getString("degree_number") %></td>
 							<td><%= rset.getString("degree_type") %></td>
 							<td><%= rset.getString("dno") %></td>
 							<td><%= rset.getString("concentration") %></td>
@@ -287,9 +310,7 @@
 				<table>
 					<tr>
 						<th>Category</th>
-						<th>Degree Type</th>
-						<th>Department Number</th>
-						<th>Concentration</th>
+						<th>Degree Number</th>
 						<th>Number Units</th>
 						<th>Required Average</th>
 					</tr>
@@ -298,13 +319,7 @@
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="insert-requirement" name="action">
 							<th><input value="" name="CATEGORY" size="10"></th>
-							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
-							</select></th>
-							<th><input value="" name="DNO" size="10"></th>
-							<th><input value="" name="CONCENTRATION" size="10"></th>
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><input value="" name="UNITS" size="10"></th>
 							<th><input value="" name="AVERAGE" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
@@ -315,13 +330,7 @@
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="update-requirement" name="action">
 							<th><input value="" name="CATEGORY" size="10"></th>
-							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
-							</select></th>
-							<th><input value="" name="DNO" size="10"></th>
-							<th><input value="" name="CONCENTRATION" size="10"></th>
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><input value="" name="UNITS" size="10"></th>
 							<th><input value="" name="AVERAGE" size="10"></th>
 							<th><input type="submit" value="Update"></th>
@@ -332,13 +341,7 @@
 						<form action="degree_requirements.jsp" method="get">
 							<input type="hidden" value="delete-requirement" name="action">
 							<th><input value="" name="CATEGORY" size="10"></th>
-							<th><select name="DEGREE_TYPE">
-								<option value="BS">BS</option>
-								<option value="MS">MS</option>
-								<option value="PhD">PhD</option>
-							</select></th>
-							<th><input value="" name="DNO" size="10"></th>
-							<th><input value="" name="CONCENTRATION" size="10"></th>
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
 							<th><input value="" name="UNITS" size="10"></th>
 							<th><input value="" name="AVERAGE" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
@@ -348,9 +351,7 @@
 					<!-- Reading in all degree requirements-->
 					<tr>
 						<th>Category</th>
-						<th>Degree Type</th>
-						<th>Department Number</th>
-						<th>Concentration</th>
+						<th>Degree Number</th>
 						<th>Number Units</th>
 						<th>Required Average</th>
 					</tr>
@@ -363,12 +364,62 @@
 					%>
 						<tr>
 							<td><%= rset.getString("category") %></td>
-							<td><%= rset.getString("degree_type") %></td>
-							<td><%= rset.getString("dno") %></td>
-							<td><%= rset.getString("concentration") %></td>
+							<td><%= rset.getString("degree_number") %></td>
 							<td><%= rset.getString("number_units") %></td>
 							<td><%= rset.getString("required_average") %></td>
 
+						</tr>
+					<%
+					}
+					rset.close();
+					%>			
+				</table>
+				
+				<h3>Courses to Fulfill Category Form</h3>
+				<table>
+					<tr>
+						<th>Category</th>
+						<th>Degree Number</th>
+						<th>Course ID</th>
+					</tr>
+					<%--Insert category_requirements Code--%>
+					<tr>
+						<form action="degree_requirements.jsp" method="get">
+							<input type="hidden" value="insert-category" name="action">
+							<th><input value="" name="CATEGORY" size="10"></th>
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+					<%--Delete category_requirements Code--%>
+					<tr>
+						<form action="degree_requirements.jsp" method="get">
+							<input type="hidden" value="delete-category" name="action">
+							<th><input value="" name="CATEGORY" size="10"></th>
+							<th><input value="" name="DEGREE_NUMBER" size="10"></th>
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					
+					<!-- Reading in all category requirements-->
+					<tr>
+						<th>Category</th>
+						<th>Degree Number</th>
+						<th>Course ID</th>
+					</tr>
+					
+ 					<%
+					pstmt = conn.prepareStatement("SELECT * FROM category_requirements;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("category") %></td>
+							<td><%= rset.getString("degree_number") %></td>
+							<td><%= rset.getString("course_id") %></td>
 						</tr>
 					<%
 					}
