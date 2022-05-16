@@ -32,7 +32,7 @@
 					
 					// user specific information
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
-					String gradeMethodSelected = request.getParameter("GRADE_OPTION");
+					String gradeMethodSelected = String.valueOf(request.getParameter("GRADE_OPTION"));
 					
 					// course specfic information
 					String possibleUnits = courseInfo.getString("possible_units");
@@ -43,16 +43,17 @@
 						
 					// Check if the user inputted values are valid
 					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
-						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, ?, ?, ?, ?, 'enroll', ?)");
+						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'enroll', ?)");
 						
 						pstmt.setString(1, request.getParameter("SSN"));
 						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-						pstmt.setString(3, request.getParameter("CLASS_ID"));
+						pstmt.setString(3, request.getParameter("CLASS_TITLE"));
 						pstmt.setString(4, request.getParameter("QUARTER"));
 						pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
-						pstmt.setInt(6, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-						pstmt.setString(7, request.getParameter("GRADE_OPTION"));
-						pstmt.setString(8, request.getParameter("GRADE"));
+						pstmt.setString(6, request.getParameter("SECTION_ID"));
+						pstmt.setInt(7, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+						pstmt.setString(8, request.getParameter("GRADE_OPTION"));
+						pstmt.setString(9, request.getParameter("GRADE"));
 						
 						pstmt.executeUpdate();
 							
@@ -75,9 +76,7 @@
 					
 					// user specific information
 					String unitsTaken = request.getParameter("UNITS_TAKEN");
-					String gradeMethodSelected = request.getParameter("GRADE_OPTION");
-					System.out.println(unitsTaken);
-					System.out.println(gradeMethodSelected);
+					String gradeMethodSelected = String.valueOf(request.getParameter("GRADE_OPTION"));
 					
 					// course specfic information
 					String possibleUnits = courseInfo.getString("possible_units");
@@ -97,7 +96,7 @@
 						pstmt.setString(3, request.getParameter("GRADE"));
 						pstmt.setString(4, request.getParameter("SSN"));
 						pstmt.setInt(5, Integer.parseInt(request.getParameter("COURSE_ID")));
-						pstmt.setString(6, request.getParameter("CLASS_ID"));
+						pstmt.setString(6, request.getParameter("CLASS_TITLE"));
 						pstmt.setString(7, request.getParameter("QUARTER"));
 						pstmt.setInt(8, Integer.parseInt(request.getParameter("YEAR")));
 						
@@ -117,7 +116,7 @@
 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM enroll WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(3, request.getParameter("CLASS_ID"));
+					pstmt.setString(3, request.getParameter("CLASS_TITLE"));
 					pstmt.setString(4, request.getParameter("QUARTER"));
 					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
@@ -133,9 +132,10 @@
 					<tr>
 						<th>SSN</th>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
+						<th>Section ID</th>
 						<th>Units Taken</th>
 						<th>Grade Option</th>
 						<th>Grade</th>
@@ -147,13 +147,14 @@
 							<input type="hidden" value="insert-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADE_OPTION">
 								<option value="letter">Letter</option>
@@ -170,13 +171,14 @@
 							<input type="hidden" value="update-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADE_OPTION">
 								<option value="letter">Letter</option>
@@ -193,13 +195,14 @@
 							<input type="hidden" value="delete-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADE_OPTION">
 								<option value="letter">Letter</option>
@@ -213,9 +216,10 @@
 					<tr>
 						<th>SSN</th>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
+						<th>Section ID</th>
 						<th>Units Taken</th>
 						<th>Grade Option</th>
 						<th>Grade</th>
@@ -230,9 +234,10 @@
 						<tr>
 							<td><%= rset.getString("SSN") %></td>
 							<td><%= rset.getString("COURSE_ID") %></td>
-							<td><%= rset.getString("CLASS_ID") %></td>
+							<td><%= rset.getString("CLASS_TITLE") %></td>
 							<td><%= rset.getString("QUARTER") %></td>
 							<td><%= rset.getString("YEAR") %></td>
+							<td><%= rset.getString("SECTION_ID") %></td>
 							<td><%= rset.getString("UNITS_TAKEN") %></td>
 							<td><%= rset.getString("GRADE_OPTION") %></td>
 							<td><%= rset.getString("GRADE") %></td>

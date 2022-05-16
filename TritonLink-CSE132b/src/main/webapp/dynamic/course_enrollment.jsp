@@ -52,14 +52,15 @@
 						
 					// Check if the user inputted values are valid
 					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
-						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'SP', 2022, ?, ?, ?, NULL)");
+						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'SP', 2022, ?, ?, ?, ?, NULL)");
 						
 						pstmt.setString(1, request.getParameter("SSN"));
 						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-						pstmt.setString(3, request.getParameter("CLASS_ID"));
-						pstmt.setInt(4, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-						pstmt.setString(5, request.getParameter("GRADING_METHOD"));
-						pstmt.setString(6, request.getParameter("STATUS"));
+						pstmt.setString(3, request.getParameter("CLASS_TITLE"));
+						pstmt.setString(4, request.getParameter("SECTION_ID"));
+						pstmt.setInt(5, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+						pstmt.setString(6, request.getParameter("GRADING_METHOD"));
+						pstmt.setString(7, request.getParameter("STATUS"));
 							
 						pstmt.executeUpdate();
 							
@@ -133,7 +134,8 @@
 					<tr>
 						<th>SSN</th>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
+						<th>Section ID</th>
 						<th>Units Taken</th>
 						<th>Grading Method</th>
 						<th>Status</th>
@@ -145,7 +147,8 @@
 							<input type="hidden" value="insert-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADING_METHOD">
 								<option value="letter">Letter</option>
@@ -165,7 +168,8 @@
 							<input type="hidden" value="update-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADING_METHOD">
 								<option value="letter">Letter</option>
@@ -185,7 +189,8 @@
 							<input type="hidden" value="delete-enroll" name="action">
 							<th><input value="" name="SSN" size="10"></th>
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="UNITS_TAKEN" size="10"></th>
 							<th><select name="GRADING_METHOD">
 								<option value="letter">Letter</option>
@@ -203,14 +208,15 @@
 					<tr>
 						<th>SSN</th>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
+						<th>Section ID
 						<th>Units Taken</th>
 						<th>Grading Method</th>
 						<th>Status</th>
 					</tr>
 					
 					<%
-					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM enroll;");
+					PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM enroll WHERE quarter = 'SP' AND year = 2022;");
 					ResultSet rset = pstmt.executeQuery();
 					
 					while (rset.next()) {
@@ -218,7 +224,8 @@
 						<tr>
 							<td><%= rset.getString("ssn") %></td>
 							<td><%= rset.getString("course_id") %></td>
-							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("class_title") %></td>
+							<td><%= rset.getString("section_id") %></td>
 							<td><%= rset.getString("units_taken") %></td>
 							<td><%= rset.getString("grade_option") %></td>
 							<td><%= rset.getString("status") %></td>

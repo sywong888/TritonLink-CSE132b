@@ -18,3 +18,6 @@ Concentration:
 - TODO: change min_gpa to float
 
 NEW Concentration_Requirements:  
+
+Classes:  
+- TODO: fix delete function

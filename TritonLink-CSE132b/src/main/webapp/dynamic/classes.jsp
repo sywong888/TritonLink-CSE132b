@@ -21,15 +21,12 @@
 				// insert classes
 				if (action != null && action.equals("insert-classes")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO classes VALUES (?, ?, ?, ?, ?, ?, ?)");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO classes VALUES (?, ?, ?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
-					pstmt.setInt(3, Integer.parseInt(request.getParameter("INSTRUCTOR_ID")));
-					pstmt.setString(4, request.getParameter("QUARTER"));
-					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setInt(6, Integer.parseInt(request.getParameter("ENROLLMENT_LIMIT")));
-					pstmt.setString(7, request.getParameter("TITLE"));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					
 					pstmt.executeUpdate();
 					
@@ -38,7 +35,7 @@
 				}
 				
 				// update classes
-				if (action != null && action.equals("update-classes")) {
+/* 				if (action != null && action.equals("update-classes")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement("UPDATE classes SET instructor_id = ?, enrollment_limit = ?, title = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					
@@ -54,30 +51,30 @@
 					
 					conn.commit();
 					conn.setAutoCommit(true);
-				}
+				} */
 				
 				// delete classes
 				if (action != null && action.equals("delete-classes")) {
 					conn.setAutoCommit(false);
 					
 					// delete meeting instances to avoid foreign key violations
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
 					
 					// delete review_session instances to avoid foreign key violations
-					pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+					pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
 					
 					// delete from enroll to avoid foreign key violations
- 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+ 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
  					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
@@ -94,21 +91,41 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// insert section
+				if (action != null && action.equals("insert-section")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO section VALUES (?, ?, ?, ?, ?, ?, ?)");
+					
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.setInt(6, Integer.parseInt(request.getParameter("INSTRUCTOR_ID")));
+					pstmt.setInt(7, Integer.parseInt(request.getParameter("ENROLLMENT_LIMIT")));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
 				// insert meeting
 				if (action != null && action.equals("insert-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO meeting VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO meeting VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("CLASS_ID"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(5, request.getParameter("DAY"));
-					pstmt.setString(6, request.getParameter("START_TIME"));
-					pstmt.setString(7, request.getParameter("END_TIME"));
-					pstmt.setString(8, request.getParameter("ROOM"));
-					pstmt.setString(9, request.getParameter("TYPE"));
-					pstmt.setString(10, request.getParameter("MANDATORY"));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.setString(6, request.getParameter("DAY"));
+					pstmt.setString(7, request.getParameter("START_TIME"));
+					pstmt.setString(8, request.getParameter("END_TIME"));
+					pstmt.setString(9, request.getParameter("ROOM"));
+					pstmt.setString(10, request.getParameter("TYPE"));
+					pstmt.setString(11, request.getParameter("MANDATORY"));
 					pstmt.executeUpdate();
 					
 					conn.commit();
@@ -165,64 +182,52 @@
 				<table>
 					<tr>
 						<th>Course ID</th>
-						<th>Class ID</th>
-						<th>Instructor ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
-						<th>Enrollment Limit</th>
-						<th>Title</th>
 					</tr>
 					<%--Insert classes Code--%>
 					<tr>
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="insert-classes" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
-							<th><input value="" name="TITLE" size="10"></th>
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
 					<%--Update classes Code--%>
-					<tr>
+<!-- 					<tr>
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="update-classes" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
-							<th><input value="" name="TITLE" size="10"></th>
 							<th><input type="submit" value="Update"></th>
 						</form>
-					</tr>
+					</tr> -->
 					<%--Delete classes Code--%>
 					<tr>
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="delete-classes" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
-							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
-							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
-							<th><input value="" name="TITLE" size="10"></th>
 							<th><input type="submit" value="Delete"></th>
 						</form>
 					</tr>
@@ -230,12 +235,9 @@
 					<!-- Reading in all classes -->
 					<tr>
 						<th>Course ID</th>
-						<th>Class ID</th>
-						<th>Instructor ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
-						<th>Enrollment Limit</th>
-						<th>Title</th>
 					</tr>
 					
 					<%
@@ -246,12 +248,107 @@
 					%>
 						<tr>
 							<td><%= rset.getString("course_id") %></td>
-							<td><%= rset.getString("class_id") %></td>
-							<td><%= rset.getString("instructor_id") %></td>
+							<td><%= rset.getString("class_title") %></td>
 							<td><%= rset.getString("quarter") %></td>
 							<td><%= rset.getString("year") %></td>
+						</tr>
+					<%
+					}
+					rset.close();
+					%>
+				</table>
+				
+				<h3>Section Form</h3>
+				<table>
+					<tr>
+						<th>Course ID</th>
+						<th>Class Title</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Section ID</th>
+						<th>Instructor ID</th>
+						<th>Enrollment Limit</th>
+					</tr>
+					<%--Insert section Code--%>
+					<tr>
+						<form action="classes.jsp" method="get">
+							<input type="hidden" value="insert-section" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
+							<th><select name="QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
+							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
+							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+					<%--Update section Code--%>
+ 					<tr>
+						<form action="classes.jsp" method="get">
+							<input type="hidden" value="update-section" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
+							<th><select name="QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
+							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
+							<th><input type="submit" value="Update"></th>
+						</form>
+					</tr>
+					<%--Delete section Code--%>
+					<tr>
+						<form action="classes.jsp" method="get">
+							<input type="hidden" value="delete-section" name="action">
+							<th><input value="" name="COURSE_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
+							<th><select name="QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
+							<th><input value="" name="INSTRUCTOR_ID" size="10"></th>
+							<th><input value="" name="ENROLLMENT_LIMIT" size="10"></th>
+							<th><input type="submit" value="Delete"></th>
+						</form>
+					</tr>
+					
+					<!-- Reading in all sections -->
+					<tr>
+						<th>Course ID</th>
+						<th>Class Title</th>
+						<th>Quarter</th>
+						<th>Year</th>
+						<th>Section ID</th>
+						<th>Instructor ID</th>
+						<th>Enrollment Limit</th>
+					</tr>
+					
+					<%
+					pstmt = conn.prepareStatement("SELECT * FROM section;");
+					rset = pstmt.executeQuery();
+					
+					while (rset.next()) {
+					%>
+						<tr>
+							<td><%= rset.getString("course_id") %></td>
+							<td><%= rset.getString("class_title") %></td>
+							<td><%= rset.getString("quarter") %></td>
+							<td><%= rset.getString("year") %></td>
+							<td><%= rset.getString("section_id") %></td>
+							<td><%= rset.getString("instructor_id") %></td>
 							<td><%= rset.getString("enrollment_limit") %></td>
-							<td><%= rset.getString("title") %></td>
 						</tr>
 					<%
 					}
@@ -263,9 +360,10 @@
 				<table>
 					<tr>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
+						<th>Section ID</th>
 						<th>Day</th>
 						<th>Start Time</th>
 						<th>End Time</th>
@@ -285,6 +383,7 @@
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="DAY" size="10"></th>
 							<th><input value="" name="START_TIME" size="10"></th>
 							<th><input value="" name="END_TIME" size="10"></th>
@@ -314,6 +413,7 @@
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="DAY" size="10"></th>
 							<th><input value="" name="START_TIME" size="10"></th>
 							<th><input value="" name="END_TIME" size="10"></th>
@@ -343,6 +443,7 @@
 								<option value="SP">Spring</option>
 							</select></th>
 							<th><input value="" name="YEAR" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
 							<th><input value="" name="DAY" size="10"></th>
 							<th><input value="" name="START_TIME" size="10"></th>
 							<th><input value="" name="END_TIME" size="10"></th>
@@ -363,9 +464,10 @@
 					<!-- Reading in all classes -->
 					<tr>
 						<th>Course ID</th>
-						<th>Class ID</th>
+						<th>Class Title</th>
 						<th>Quarter</th>
 						<th>Year</th>
+						<th>Section</th>
 						<th>Day</th>
 						<th>Start Time</th>
 						<th>End Time</th>
@@ -382,9 +484,10 @@
 					%>
 						<tr>
 							<td><%= rset.getString("course_id") %></td>
-							<td><%= rset.getString("class_id") %></td>
+							<td><%= rset.getString("class_title") %></td>
 							<td><%= rset.getString("quarter") %></td>
 							<td><%= rset.getString("year") %></td>
+							<td><%= rset.getString("section_id") %></td>
 							<td><%= rset.getString("day") %></td>
 							<td><%= rset.getString("start_time") %></td>
 							<td><%= rset.getString("end_time") %></td>
