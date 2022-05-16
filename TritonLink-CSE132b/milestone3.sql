@@ -81,33 +81,59 @@ WHERE u.category = b.category;
 
 WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), WITH coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), WITH unitsTakenPerCategory AS (SELECT category, SUM(units_taken) AS takenUnits FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP category) SELECT category, u.number_units - ut.takenUnits FROM unitsPerCategory u, unitsTakenPerCategory ut WHERE u.category - b.category;
 
-WITH enrolled_meetings AS
-(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id
-FROM enroll e, meetings m
-WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022
-AND e.course_id = m.course_id AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year),
-meeting_options AS
-(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id
-FROM meetings m
-WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS
-(SELECT * FROM enrolled_meetings em WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time AND em.course_id = m.course_id AND em.class_id = m.class_id)),
-no_conflicts AS
-(SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id
-FROM meeting_options mo, enrolled_meetings em
-WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day)
-SELECT mo.course_id, mo.class_id
-FROM no_conflicts
-EXCEPT
-SELECT mo.course_id, mo.class_id FROM meeting_options mo WHERE NOT EXISTS (SELECT * FROM no_conflicts nc WHERE mo.day = nc.day AND mo.start_time = nc.start_time AND mo.end_time = nc.end_time AND mo.course_id = nc.course_id AND mo.class_id = nc.class_id);
 
-WITH enrolled_meetings AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM enroll e, meeting m WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM meeting m WHERE m.quarter = 'SP' AND m.year = 2022), no_conflicts AS (SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id FROM meeting_options mo, enrolled_meetings em WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day) SELECT * FROM no_conflicts;
-
-no_conflicts AS (SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id FROM meeting_options mo, enrolled_meetings em WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day)
-
+WITH enrolled_meetings AS 
+(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id 
+FROM enroll e, meeting m 
+WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id 
+AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year), 
+meeting_options AS 
+(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id 
+FROM meeting m 
+WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS 
+(SELECT * 
+FROM enrolled_meetings em 
+WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time 
+AND em.course_id = m.course_id AND em.class_id = m.class_id)), 
+conflicts AS
+(SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id 
+FROM meeting_options mo, enrolled_meetings em 
+WHERE (mo.start_time > em.start_time AND mo.start_time < em.end_time)
+OR (mo.end_time > em.start_time AND mo.end_time < em.end_time)
+OR (mo.start_time < em.start_time AND mo.end_time > em.end_time)
+OR (mo.start_time > em.start_time AND mo.end_time < em.end_time)
 
 
+no_conflicts AS 
+(SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id 
+FROM meeting_options mo, enrolled_meetings em 
+WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day) 
+SELECT DISTINCT mo.course_id, mo.class_id FROM meeting_options mo WHERE NOT EXISTS (SELECT * FROM no_conflicts nc WHERE mo.day = nc.day AND mo.start_time = nc.start_time AND mo.end_time = nc.end_time AND mo.course_id = nc.course_id AND mo.class_id = nc.class_id) EXCEPT SELECT DISTINCT nc.course_id, nc.class_id FROM no_conflicts nc;");
+
+conflicts AS
+(SELECT)
+
+WITH units AS
+(SELECT cr.name, SUM(e.units_taken) AS total_units_taken
+FROM enroll e, concentration_requirement cr
+WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id
+GROUP BY cr.name),
+gpa AS
+(SELECT cr.name, AVG(gc.number_grade) AS concentration_gpa
+FROM enroll e, concentration_requirement cr, grade_conversion gc
+WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id AND e.grade = gc.letter_grade
+AND e.grade_option = 'letter'
+GROUP BY cr.name),
+units_gpa AS
+(SELECT units.name, units.total_units_taken, gpa.concentration_gap
+FROM units JOIN gpa ON units.name = gpa.name),
+SELECT c.name
+FROM units_gpa ug, concentration c
+WHERE c.degree_number = ? AND c.name = ug.name AND ug.total_units_taken >= c.min_units AND ug.concentration_gpa >= c.min_gpa;
 
 
+
+WITH units AS (SELECT cr.name, SUM(e.units_taken) AS total_units_taken FROM enroll e, concentration_requirement cr WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id GROUP BY cr.name), gpa AS (SELECT cr.name, AVG(gc.number_grade) AS concentration_gpa FROM enroll e, concentration_requirement cr, grade_conversion gc WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id AND e.grade = gc.letter_grade AND e.grade_option = 'letter' GROUP BY cr.name), units_gpa AS (SELECT units.name, units.total_units_taken, gpa.concentration_gap FROM units JOIN gpa ON units.name = gpa.name), SELECT c.name FROM units_gpa ug, concentration c WHERE c.degree_number = ? AND c.name = ug.name AND ug.total_units_taken >= c.min_units AND ug.concentration_gpa >= c.min_gpa;
 
 
 

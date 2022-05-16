@@ -13,3 +13,8 @@ Enroll:
 Meeting:  
 - new start_time and end_time attributes  
 - TODO: java code to make sure start is before end
+
+Concentration:  
+- TODO: change min_gpa to float
+
+NEW Concentration_Requirements:  

@@ -389,15 +389,109 @@
 				
 				/* Reports I e */
 				%>
-				<h4>d)</h4>
+				<h4>e)</h4>
 				<h4>All master's students currently enrolled:</h4>
+				<table>
+					<tr>
+						<th>SSN</th>	
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+					</tr>
 				<%
 				
 				// HTML select for master's students enrolled in the current quarter
 				PreparedStatement currentMastersStmt = conn.prepareStatement("SELECT e.ssn, s.first_name, s.middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND s.student_type = 'masters' AND e.quarter = 'SP' AND e.year = 2022;");
 				ResultSet currentMastersRset = currentMastersStmt.executeQuery();
 				ArrayList<String> currentMasters = new ArrayList<>();
+				while (currentMastersRset.next()) {
+					currentMasters.add(currentMastersRset.getString("ssn"));
+					%>
+					<%--Display information for master's students currently enrolled--%>
+						<tr>
+							<td><%= currentMastersRset.getString("ssn") %></td>
+							<td><%= currentMastersRset.getString("first_name") %></td>
+							<td><%= currentMastersRset.getString("middle_name") %></td>
+							<td><%= currentMastersRset.getString("last_name") %></td>
+						</tr>
+					</table>
+					<%
+				}
+				currentMastersRset.close();
 				%>
+				
+				<%
+				PreparedStatement mastersDegreeStmt = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'masters';");
+				ResultSet mastersDegreeRset = mastersDegreeStmt.executeQuery();
+				ArrayList<String> mastersDegrees = new ArrayList<>();
+				while (mastersDegreeRset.next()) {
+					// bscDegrees.add(rsetId2.getString("dname"));
+					mastersDegrees.add(mastersDegreeRset.getString("degree_number"));
+					
+				}
+				mastersDegreeRset.close();
+				%>
+			
+				<table>
+					<%--Report I e--%>
+					<tr>
+						<th>Select undergraduate enrolled in current quarter:</th>	
+						<th>Select Master's degree:</th>	
+					</tr>
+					<tr>
+						<form action="reports.jsp" method="get">
+							<input type="hidden" value="select-report-I-e" name="action">							
+							<th><select name="SSN">
+								<%  for(String ssn: currentMasters) { %>
+  									 <option value="<%=ssn%>"><%=ssn%></option>
+  								<% } %>
+							</select></th>
+							<th><select name="DEGREE_NUMBER">
+								<%  for(String mastersDegree: mastersDegrees) { %>
+  									 <option value="<%=mastersDegree%>"><%=mastersDegree%></option>
+  								<% } %>
+							</select></th>
+							<th><input type="submit" value="Submit"></th>
+						</form>
+					</tr>
+				</table>
+				
+ 				<table>
+					<% 
+					if (action != null && action.equals("select-report-I-e")) {
+						conn.setAutoCommit(false);
+						String ssn = request.getParameter("SSN");
+						int degreeNumber = Integer.parseInt(request.getParameter("DEGREE_NUMBER"));
+						
+						PreparedStatement concentrationStmt = conn.prepareStatement("WITH units AS (SELECT cr.name, SUM(e.units_taken) AS total_units_taken FROM enroll e, concentration_requirements cr WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id GROUP BY cr.name), gpa AS (SELECT cr.name, AVG(gc.number_grade) AS concentration_gpa FROM enroll e, concentration_requirements cr, grade_conversion gc WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id AND e.grade = gc.letter_grade AND e.grade_option = 'letter' GROUP BY cr.name), units_gpa AS (SELECT units.name, units.total_units_taken, gpa.concentration_gpa FROM units JOIN gpa ON units.name = gpa.name) SELECT c.name FROM units_gpa ug, concentration c WHERE c.degree_number = ? AND c.name = ug.name AND ug.total_units_taken >= c.min_units AND ug.concentration_gpa >= c.min_gpa;");
+						concentrationStmt.setString(1, ssn);
+						concentrationStmt.setInt(2, degreeNumber);
+ 						concentrationStmt.setString(3, ssn);
+						concentrationStmt.setInt(4, degreeNumber);
+ 						concentrationStmt.setInt(5, degreeNumber);
+						ResultSet concentrationRset = concentrationStmt.executeQuery();
+						
+						%>
+						<tr>
+							<th>Concentration Name</th>
+						</tr>
+						<%
+						
+						while (concentrationRset.next()) {
+							%>
+								<tr>
+									<td><%= concentrationRset.getString("name") %></td>
+								</tr>
+							</table>
+							<%
+						}
+						
+						concentrationRset.close();
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+					%>
+				</table>
 				
 				<%
 				/* Reports II a */
@@ -422,7 +516,7 @@
 				while (currentStudents2Rset.next()) {
 					currentStudents2.add(currentStudents2Rset.getString("ssn"));
 					%>
-					<%--Display information for student currently enrolled--%>
+					<%--Display information for students currently enrolled--%>
 						<tr>
 							<td><%= currentStudents2Rset.getString("ssn") %></td>
 							<td><%= currentStudents2Rset.getString("first_name") %></td>
