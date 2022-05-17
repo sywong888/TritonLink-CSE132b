@@ -65,7 +65,8 @@
 					<%--Report I a--%>
 					<tr>
 						<form action="reports.jsp" method="get">
-							<input type="hidden" value="select-report-I-a" name="action">							<th><select name="SSN">
+							<input type="hidden" value="select-report-I-a" name="action">							
+							<th><select name="SSN">
 								<%  for(String ssn: currentStudents) { %>
   									 <option value="<%=ssn%>"><%=ssn%></option>
   								<% } %>
@@ -114,6 +115,108 @@
 					%>
 				</table>
 				<%
+				
+				/* Reports I b */
+				%>
+				<h4>b)</h4>
+				<h4>All classes:</h4>
+				<table>
+						<tr>
+							<th>Course ID</th>	
+							<th>Class Title</th>
+							<th>Quarter</th>
+							<th>Year</th>
+						</tr>
+				<%
+				
+				// HTML select for all classes
+				PreparedStatement classesStmt = conn.prepareStatement("SELECT c.course_id, c.class_title, c.quarter, c.year FROM classes c;");
+				ResultSet classesRset = classesStmt.executeQuery();
+				ArrayList<String> classes = new ArrayList<>();
+				while (classesRset.next()) {
+					classes.add(classesRset.getString("class_title"));
+					%>
+					<%--Display information for all students ever enrolled--%>
+						<tr>
+							<td><%= classesRset.getString("course_id") %></td>
+							<td><%= classesRset.getString("class_title") %></td>
+							<td><%= classesRset.getString("quarter") %></td>
+							<td><%= classesRset.getString("year") %></td>
+						</tr>
+					<%
+				}
+				%>
+				</table>
+				<%
+				classesRset.close();
+				%>
+			
+				<table>
+					<%--Report I b--%>
+					<tr>
+						<th>Select a class:</th>	
+					</tr>
+					<tr>
+						<form action="reports.jsp" method="get">
+							<input type="hidden" value="select-report-I-b" name="action">							
+							<th><select name="TITLE">
+								<%  for(String title: classes) { %>
+  									 <option value="<%=title%>"><%=title%></option>
+  								<% } %>
+							</select></th>
+							<th><input type="submit" value="Submit"></th>
+						</form>
+					</tr>
+				</table>
+				<table>
+					<% 
+					if (action != null && action.equals("select-report-I-b")) {
+						conn.setAutoCommit(false);
+						String title = request.getParameter("TITLE");
+						
+						PreparedStatement rosterStmt = conn.prepareStatement("SELECT s.*, e.units_taken, e.grade_option FROM enroll e, student s WHERE e.class_title = ? AND s.ssn = e.ssn;");
+						rosterStmt.setString(1, title);
+						ResultSet rosterRset = rosterStmt.executeQuery();
+						%>
+						<tr>
+							<th>SSN</th>
+							<th>First Name</th>
+							<th>Middle Name</th>
+							<th>Last Name</th>
+							<th>Student ID</th>
+							<th>Student Type</th>
+							<th>Resident Type</th>
+							<th>Department Number</th>
+							<th>Currently Enrolled?</th>
+							<th>Units Taken</th>
+							<th>Grade Option</th>
+						</tr>
+						<%
+						while (rosterRset.next()) {	
+							%>
+							<tr>
+								<td><%= rosterRset.getString("ssn") %></td>
+								<td><%= rosterRset.getString("first_name") %></td>
+								<td><%= rosterRset.getString("middle_name") %></td>
+								<td><%= rosterRset.getString("last_name") %></td>
+								<td><%= rosterRset.getString("student_id") %></td>
+								<td><%= rosterRset.getString("student_type") %></td>
+								<td><%= rosterRset.getString("resident_type") %></td>
+								<td><%= rosterRset.getString("dno") %></td>
+								<td><%= rosterRset.getString("enrolled") %></td>
+								<td><%= rosterRset.getString("units_taken") %></td>
+								<td><%= rosterRset.getString("grade_option") %></td>
+							</tr>
+							<%
+						}
+						rosterRset.close();
+						
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+					%>
+				</table>
+				<% 
 				
 				/* Reports I c */
 				%>
@@ -275,12 +378,10 @@
 				}
 				currentUndergradRset.close();
 				
-				// PreparedStatement selectId2 = conn.prepareStatement("SELECT d.dname FROM ucsd_degree u, department d WHERE degree_type = 'bsc' AND u.dno = d.dno;");
 				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'bsc';");
 				ResultSet rsetId2 = selectId2.executeQuery();
 				ArrayList<String> bscDegrees = new ArrayList<>();
 				while (rsetId2.next()) {
-					// bscDegrees.add(rsetId2.getString("dname"));
 					bscDegrees.add(rsetId2.getString("degree_number"));
 					
 				}
@@ -457,17 +558,44 @@
 									<td><%= concentrationRset.getString("name") %></td>
 								</tr>
 							</table>
+							<table>
 							<%
 						}
 						
-						concentrationRset.close();
+						PreparedStatement coursesLeftStmt = conn.prepareStatement("WITH y_concentration AS (SELECT c.* FROM concentration c WHERE degree_number = ?), courses_taken AS (SELECT e.course_id FROM enroll e WHERE e.ssn = ? AND e.grade != 'IN'), courses_left AS (SELECT cr.name, cr.course_id FROM concentration_requirements cr, y_concentration y WHERE cr.degree_number = y.degree_number AND cr.name = y.name AND cr.course_id NOT IN (SELECT * FROM courses_taken)), future_classes AS (SELECT c.course_id, c.quarter, c.year FROM classes c WHERE c.year > 2022 OR (c.year = 2022 AND c.quarter = 'FA')), earliest_classes AS (SELECT fc1.course_id, fc1.quarter, fc1.year FROM future_classes fc1 WHERE NOT EXISTS (SELECT * FROM future_classes fc2 WHERE fc1.course_id = fc2.course_id AND fc1.quarter != fc2.quarter AND fc1.year != fc2.year AND (fc2.quarter >= fc1.quarter AND fc2.year <= fc1.year))) SELECT * FROM courses_left cl LEFT JOIN earliest_classes ec ON cl.course_id = ec.course_id;");
+						coursesLeftStmt.setInt(1, degreeNumber);
+						coursesLeftStmt.setString(2, ssn);
+						ResultSet coursesLeftRset = coursesLeftStmt.executeQuery();
+						
+						%>
+						<tr>
+							<th>Concentration Name</th>
+							<th>Course ID</th>
+							<th>Quarter</th>
+							<th>Year</th>
+						</tr>
+						<%
+						
+						while (coursesLeftRset.next()) {
+							%>
+								<tr>
+									<td><%= coursesLeftRset.getString("name") %></td>
+									<td><%= coursesLeftRset.getString("course_id") %></td>
+									<td><%= coursesLeftRset.getString("quarter") %></td>
+									<td><%= coursesLeftRset.getString("year") %></td>
+								</tr>
+							</table>
+							<%
+						}
+						
+						coursesLeftRset.close();
 						conn.commit();
 						conn.setAutoCommit(true);
 					}
 					%>
 				</table>
-				
 				<%
+				
 				/* Reports II a */
 				%>
 				<h3>Report II</h3>
@@ -509,7 +637,7 @@
 						<th>Select student enrolled in current quarter:</th>	
 					</tr>
 					
-					<%--Report I a--%>
+					<%--Report II a--%>
 					<tr>
 						<form action="reports.jsp" method="get">
 							<input type="hidden" value="select-report-II-a" name="action">							
