@@ -83,35 +83,34 @@ WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement 
 
 
 WITH enrolled_meetings AS 
-(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id 
+(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_title 
 FROM enroll e, meeting m 
 WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id 
-AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year), 
+AND e.class_title = m.class_title AND e.section_id = e.section_id AND e.quarter = m.quarter AND e.year = m.year), 
 meeting_options AS 
-(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id 
+(SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_title
 FROM meeting m 
 WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS 
 (SELECT * 
 FROM enrolled_meetings em 
 WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time 
-AND em.course_id = m.course_id AND em.class_id = m.class_id)), 
-conflicts AS
-(SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id 
-FROM meeting_options mo, enrolled_meetings em 
-WHERE (mo.start_time > em.start_time AND mo.start_time < em.end_time)
+AND em.course_id = m.course_id AND em.class_title = m.class_title AND em.section_id = m.section_id))
+SELECT c.class_title
+FROM classes c
+WHERE c.quarter = 'SP' AND c.year = 2022 AND NOT EXISTS
+(SELECT *
+FROM section s
+WHERE c.course_id = s.course_id AND c.class_title = s.class_title AND c.quarter = s.quarter AND c.year = s.quarter AND EXISTS
+(SELECT * FROM meeting_options mo, enrolled_meetings em
+WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarter = mo.quarter AND s.year = mo.year
+AND s.section_id = mo.section_id
+AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time)
 OR (mo.end_time > em.start_time AND mo.end_time < em.end_time)
 OR (mo.start_time < em.start_time AND mo.end_time > em.end_time)
-OR (mo.start_time > em.start_time AND mo.end_time < em.end_time)
+OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));
 
 
-no_conflicts AS 
-(SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id 
-FROM meeting_options mo, enrolled_meetings em 
-WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day) 
-SELECT DISTINCT mo.course_id, mo.class_id FROM meeting_options mo WHERE NOT EXISTS (SELECT * FROM no_conflicts nc WHERE mo.day = nc.day AND mo.start_time = nc.start_time AND mo.end_time = nc.end_time AND mo.course_id = nc.course_id AND mo.class_id = nc.class_id) EXCEPT SELECT DISTINCT nc.course_id, nc.class_id FROM no_conflicts nc;");
-
-conflicts AS
-(SELECT)
+WITH enrolled_meetings AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM enroll e, meeting m  WHERE e.ssn = '111111111' AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id AND e.class_title = m.class_title AND e.section_id = e.section_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM meeting m  WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em  WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time  AND em.course_id = m.course_id AND em.class_title = m.class_title AND em.section_id = m.section_id)) SELECT c.class_title FROM classes c WHERE c.quarter = 'SP' AND c.year = 2022 AND NOT EXISTS (SELECT * FROM section s WHERE c.course_id = s.course_id AND c.class_title = s.class_title AND c.quarter = s.quarter AND c.year = s.year AND EXISTS (SELECT * FROM meeting_options mo, enrolled_meetings em WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarter = mo.quarter AND s.year = mo.year AND s.section_id = mo.section_id AND mo.day = em.day AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time) OR (mo.end_time > em.start_time AND mo.end_time < em.end_time) OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));
 
 WITH units AS
 (SELECT cr.name, SUM(e.units_taken) AS total_units_taken

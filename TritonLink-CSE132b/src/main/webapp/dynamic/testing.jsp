@@ -19,7 +19,7 @@
 				// Connection conn = DriverManager.getConnection("jdbc:postgresql:cse_132b_db?currentSchema=cse_132b&user=postgres&password=BrPo#vPHu54f");
 				
 				String action = request.getParameter("action");
-
+				
 				/* Reports I a */
 				
 				%>
@@ -65,7 +65,8 @@
 					<%--Report I a--%>
 					<tr>
 						<form action="reports.jsp" method="get">
-							<input type="hidden" value="select-report-I-a" name="action">							<th><select name="SSN">
+							<input type="hidden" value="select-report-I-a" name="action">							
+							<th><select name="SSN">
 								<%  for(String ssn: currentStudents) { %>
   									 <option value="<%=ssn%>"><%=ssn%></option>
   								<% } %>
@@ -81,7 +82,28 @@
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
-						PreparedStatement classesTaken = conn.prepareStatement("SELECT c.*, e.section_id, e.units_taken FROM enroll e, classes c WHERE e.quarter = 'SP' AND e.year = 2022 AND e.ssn = ? AND e.class_title = c.class_title;");
+						PreparedStatement studentStmt = conn.prepareStatement("SELECT ssn, first_name, middle_name, last_name FROM student WHERE ssn = ?;");
+						studentStmt.setString(1, ssn);
+						ResultSet studentRset = studentStmt.executeQuery();
+						while (studentRset.next()) {
+			
+							%>
+							<tr>
+								<th>SSN</th>
+								<th>First Name</th>
+								<th>Middle Name</th>
+								<th>Last Name</th>
+							</tr>
+							<tr>
+								<td><%= studentRset.getString("ssn") %></td>
+								<td><%= studentRset.getString("first_name") %></td>
+								<td><%= studentRset.getString("middle_name") %></td>
+								<td><%= studentRset.getString("last_name") %></td>
+							</tr>
+							<%
+						}
+						
+						PreparedStatement classesTaken = conn.prepareStatement("SELECT c.*, e.units_taken FROM enroll e, classes c WHERE e.quarter = 'SP' AND e.year = 2022 AND e.ssn = ? AND e.class_id = c.class_id;");
 						classesTaken.setString(1, ssn);
 						ResultSet classesRset = classesTaken.executeQuery();
 						
@@ -89,31 +111,36 @@
 							%>
 							<tr>
 								<th>Course ID</th>
-								<th>Class Title</th>
+								<th>Class ID</th>
+								<th>Instructor ID</th>
 								<th>Quarter</th>
 								<th>Year</th>
+								<th>Enrollment Limit</th>
 								<th>Title</th>
 								<th>Units Taken</th>
 							</tr>
 							<tr>
 								<td><%= classesRset.getString("course_id") %></td>
-								<td><%= classesRset.getString("class_title") %></td>
+								<td><%= classesRset.getString("class_id") %></td>
+								<td><%= classesRset.getString("instructor_id") %></td>
 								<td><%= classesRset.getString("quarter") %></td>
 								<td><%= classesRset.getString("year") %></td>
-								<td><%= classesRset.getString("section_id") %></td>
+								<td><%= classesRset.getString("enrollment_limit") %></td>
+								<td><%= classesRset.getString("title") %></td>
 								<td><%= classesRset.getString("units_taken") %></td>
 							</tr>
 							<%
 						}
 
-						classesRset.close();
+						studentRset.close();
 						conn.commit();
 						conn.setAutoCommit(true);
 					
 					}
 					%>
 				</table>
-				<%
+				
+				<% 
 				
 				/* Reports I c */
 				%>
@@ -171,15 +198,18 @@
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
-						PreparedStatement classesTaken = conn.prepareStatement("SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year;");
+						PreparedStatement classesTaken = conn.prepareStatement("SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_id = e.class_id ORDER BY e.quarter, e.year;");
 						classesTaken.setString(1, ssn);
 						ResultSet takenRset = classesTaken.executeQuery();
 						%>
 						<tr>
 							<th>Course ID</th>
-							<th>Class Title</th>
+							<th>Class ID</th>
+							<th>Instructor ID</th>
 							<th>Quarter</th>
 							<th>Year</th>
+							<th>Enrollment Limit</th>
+							<th>Title</th>
 							<th>Units Taken</th>
 							<th>Grade</th>
 						</tr>
@@ -188,9 +218,12 @@
 							%>
 							<tr>
 								<td><%= takenRset.getString("course_id") %></td>
-								<td><%= takenRset.getString("class_title") %></td>
+								<td><%= takenRset.getString("class_id") %></td>
+								<td><%= takenRset.getString("instructor_id") %></td>
 								<td><%= takenRset.getString("quarter") %></td>
 								<td><%= takenRset.getString("year") %></td>
+								<td><%= takenRset.getString("enrollment_limit") %></td>
+								<td><%= takenRset.getString("title") %></td>
 								<td><%= takenRset.getString("units_taken") %></td>
 								<td><%= takenRset.getString("grade") %></td>
 							</tr>
@@ -198,7 +231,7 @@
 						}
 						takenRset.close();
 						
-						PreparedStatement quarterStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT c.quarter, c.year, AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade GROUP BY quarter, year;");
+						PreparedStatement quarterStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_id = e.class_id ORDER BY e.quarter, e.year) SELECT c.quarter, c.year, AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade GROUP BY quarter, year;");
 						quarterStmt.setString(1, ssn);
 						ResultSet quarterRset = quarterStmt.executeQuery();
 						%>
@@ -219,7 +252,7 @@
 						}
 						quarterRset.close();
 						
-						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;");
+						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_id = e.class_id ORDER BY e.quarter, e.year) SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;");
 						cumulativeStmt.setString(1, ssn);
 						ResultSet cumulativeRset = cumulativeStmt.executeQuery();
 						%>
@@ -301,7 +334,7 @@
   									 <option value="<%=undergradInfo%>"><%=undergradInfo%></option>
   								<% } %>
 							</select></th>
-							<th><select name="DEGREE_NUMBER">
+							<th><select name="DNAME">
 								<%  for(String bscDegree: bscDegrees) { %>
   									 <option value="<%=bscDegree%>"><%=bscDegree%></option>
   								<% } %>
@@ -315,10 +348,11 @@
 					if (action != null && action.equals("select-report-I-d")) {
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
-						String degreeNumber = request.getParameter("DEGREE_NUMBER");
+						String dname = request.getParameter("DNAME");
 						
+						// PreparedStatement unitStmt = conn.prepareStatement("SELECT u.total_units FROM ucsd_degree u, department d WHERE degree_type = 'bsc' AND d.dname = ? AND d.dno = u.dno;");
 						PreparedStatement unitStmt = conn.prepareStatement("SELECT u.total_units FROM ucsd_degree u WHERE u.degree_number = ?;");
-						unitStmt.setInt(1, Integer.parseInt(degreeNumber));
+						unitStmt.setInt(1, Integer.parseInt(dname));
 						ResultSet unitRset = unitStmt.executeQuery();
 						while (unitRset.next()) {
 							%>
@@ -332,17 +366,10 @@
 						}
 						unitRset.close();
 						
-						
-						%>
-						<tr>
-							<th>Category</th>
-							<th>Units Left</th>
-						</tr>
-						<%
-						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category) SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL");
-						unitsLeft.setInt(1, Integer.parseInt(degreeNumber));
+						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS takenUnits FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category) (SELECT ut.category, u.number_units - ut.takenUnits AS units_left FROM unitsPerCategory u, unitsTakenPerCategory ut WHERE u.category = ut.category);");
+						unitsLeft.setInt(1, Integer.parseInt(dname));
  						unitsLeft.setString(2, ssn);
-						unitsLeft.setInt(3, Integer.parseInt(degreeNumber));
+						unitsLeft.setInt(3, Integer.parseInt(dname));
 						ResultSet unitsLeftRset = unitsLeft.executeQuery();
 						while (unitsLeftRset.next()) {
 							%>
@@ -409,7 +436,7 @@
 				<table>
 					<%--Report I e--%>
 					<tr>
-						<th>Select Master's student enrolled in current quarter:</th>	
+						<th>Select undergraduate enrolled in current quarter:</th>	
 						<th>Select Master's degree:</th>	
 					</tr>
 					<tr>
@@ -512,8 +539,7 @@
 					<%--Report I a--%>
 					<tr>
 						<form action="reports.jsp" method="get">
-							<input type="hidden" value="select-report-II-a" name="action">							
-							<th><select name="SSN">
+							<input type="hidden" value="select-report-II-a" name="action">							<th><select name="SSN">
 								<%  for(String ssn: currentStudents2) { %>
   									 <option value="<%=ssn%>"><%=ssn%></option>
   								<% } %>
@@ -532,17 +558,16 @@
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
-						PreparedStatement conflictStmt = conn.prepareStatement("WITH enrolled_meetings AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM enroll e, meeting m  WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id  AND e.class_title = m.class_title AND e.section_id = e.section_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM meeting m  WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em  WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time  AND em.course_id = m.course_id AND em.class_title = m.class_title AND em.section_id = m.section_id)), enrolled_classes AS (SELECT DISTINCT em.class_title, em.quarter, em.year, em.course_id FROM enrolled_meetings em) SELECT c.class_title FROM enrolled_classes c WHERE c.quarter = 'SP' AND c.year = 2022 AND NOT EXISTS (SELECT * FROM section s WHERE c.course_id = s.course_id AND c.class_title = s.class_title AND c.quarter = s.quarter AND c.year = s.year AND EXISTS (SELECT * FROM meeting_options mo, enrolled_meetings em WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarter = mo.quarter AND s.year = mo.year AND s.section_id = mo.section_id AND mo.day = em.day AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time) OR (mo.end_time > em.start_time AND mo.end_time < em.end_time) OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));");
+						PreparedStatement conflictStmt = conn.prepareStatement("WITH enrolled_meetings AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM enroll e, meeting m WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id AND e.class_id = m.class_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.day, m.start_time, m.end_time, m.course_id, m.class_id FROM meeting m WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time AND em.course_id = m.course_id AND em.class_id = m.class_id)), no_conflicts AS (SELECT mo.day, mo.start_time, mo.end_time, mo.course_id, mo.class_id FROM meeting_options mo, enrolled_meetings em WHERE (mo.end_time <= em.start_time OR mo.start_time >= em.end_time) AND mo.day != em.day) SELECT DISTINCT mo.course_id, mo.class_id FROM meeting_options mo WHERE NOT EXISTS (SELECT * FROM no_conflicts nc WHERE mo.day = nc.day AND mo.start_time = nc.start_time AND mo.end_time = nc.end_time AND mo.course_id = nc.course_id AND mo.class_id = nc.class_id) EXCEPT SELECT DISTINCT nc.course_id, nc.class_id FROM no_conflicts nc;");
 						conflictStmt.setString(1, ssn);
 						ResultSet conflictRset = conflictStmt.executeQuery();
 						
 						while (conflictRset.next()) {
 							%>
-							<%--Display information for students currently enrolled--%>
-								<tr>
-									<td><%= conflictRset.getString("class_title") %></td>
-								</tr>
-							</table>
+							<tr>
+								<td><%= conflictRset.getString("course_id") %></td>
+								<td><%= conflictRset.getString("class_id") %></td>
+							</tr>
 							<%
 						}
 						

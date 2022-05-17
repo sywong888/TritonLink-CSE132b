@@ -34,8 +34,8 @@
 					conn.setAutoCommit(true);
 				}
 				
-				// update classes
-/* 				if (action != null && action.equals("update-classes")) {
+				// update classes - remove bc primary key is all attributes
+/*  				if (action != null && action.equals("update-classes")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement("UPDATE classes SET instructor_id = ?, enrollment_limit = ?, title = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
 					
@@ -201,7 +201,7 @@
 							<th><input type="submit" value="Insert"></th>
 						</form>
 					</tr>
-					<%--Update classes Code--%>
+					<%--Update classes Code - remove because primary key is all attributes--%>
 <!-- 					<tr>
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="update-classes" name="action">
