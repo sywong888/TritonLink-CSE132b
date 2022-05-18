@@ -89,7 +89,7 @@
 						
 					// Check if the user inputted values are valid
 					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
-						pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, grade_option = ?, grade = ? WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+						pstmt = conn.prepareStatement("UPDATE enroll SET units_taken = ?, grade_option = ?, grade = ? WHERE ssn = ? AND course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
 						
 						pstmt.setInt(1, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
 						pstmt.setString(2, request.getParameter("GRADE_OPTION"));
@@ -99,6 +99,7 @@
 						pstmt.setString(6, request.getParameter("CLASS_TITLE"));
 						pstmt.setString(7, request.getParameter("QUARTER"));
 						pstmt.setInt(8, Integer.parseInt(request.getParameter("YEAR")));
+						pstmt.setString(9, request.getParameter("SECTION_ID"));
 						
 						pstmt.executeUpdate();
 							
@@ -113,12 +114,13 @@
 				if (action != null && action.equals("delete-enroll")) {
 					conn.setAutoCommit(false);
 					
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM enroll WHERE ssn = ? AND course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM enroll WHERE ssn = ? AND course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
 					pstmt.setString(1, request.getParameter("SSN"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(3, request.getParameter("CLASS_TITLE"));
 					pstmt.setString(4, request.getParameter("QUARTER"));
 					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(6, request.getParameter("SECTION_ID"));
 					pstmt.executeUpdate();
 					
 					conn.commit();

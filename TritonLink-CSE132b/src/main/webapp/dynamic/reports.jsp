@@ -675,10 +675,124 @@
 						}
 						
 						conflictRset.close();
+						
 						conn.commit();
 						conn.setAutoCommit(true);
 					}
 					%>
+				</table>
+				<%
+				
+				/* Reports II b */
+				%>
+				<h4>b)</h4>
+				<h4>Sections given in the given quarter:</h4>
+				<table>
+					<tr>
+						<th>Course ID</th>	
+						<th>Section ID</th>
+					</tr>
+				<%
+				
+				// HTML select for sections given in the current quarter
+				PreparedStatement sectionStmt = conn.prepareStatement("SELECT s.course_id, s.section_id FROM section s WHERE s.quarter = 'SP' AND s.year = 2022;");
+				ResultSet sectionRset = sectionStmt.executeQuery();
+				ArrayList<String> sections = new ArrayList<>();
+				
+				while (sectionRset.next()) {
+					sections.add(sectionRset.getString("section_id"));
+					%>
+					<%--Display information for students currently enrolled--%>
+						<tr>
+							<td><%= sectionRset.getString("course_id") %></td>
+							<td><%= sectionRset.getString("section_id") %></td>
+						</tr>
+					</table>
+					<%
+				}
+				sectionRset.close();
+				%>
+				
+				<%--HTML SELECT for student currently enrolled--%>
+				<table>
+					<tr>
+						<th>Select section given in the current quarter:</th>	
+					</tr>
+					
+					<%--Report II a--%>
+					<tr>
+						<form action="reports.jsp" method="get">
+							<input type="hidden" value="select-report-II-b" name="action">							
+							<th><select name="SSN">
+								<%  for(String section: sections) { %>
+  									 <option value="<%=section%>"><%=section%></option>
+  								<% } %>
+							</select></th>
+							<th><input type="submit" value="Submit"></th>
+						</form>
+					</tr>
+				</table>
+				<%
+				
+				/* Reports III a */
+				%>
+				<h4>a)</h4>
+				<%
+				
+				// HTML select for courses, professors, quarters, years
+				PreparedStatement courseStmt = conn.prepareStatement("SELECT c.course_id FROM courses c;");
+				ResultSet courseRset = courseStmt.executeQuery();
+				ArrayList<String> courses = new ArrayList<>();
+				
+				while (courseRset.next()) {
+					courses.add(courseRset.getString("course_id"));
+				}
+				courseRset.close();
+				
+				PreparedStatement professorStmt = conn.prepareStatement("SELECT f.faculty_id FROM faculty f;");
+				ResultSet professorRset = professorStmt.executeQuery();
+				ArrayList<String> profs = new ArrayList<>();
+				
+				while (professorRset.next()) {
+					profs.add(professorRset.getString("faculty_id"));
+				}
+				professorRset.close();
+				%>
+				
+				<%--HTML SELECT--%>
+				<table>
+					<tr>
+						<th>Course:</th>	
+						<th>Professor:</th>
+						<th>Quarter:</th>
+						<th>Year:</th>
+					</tr>
+					
+					<%--Report III a--%>
+					<tr>
+						<form action="reports.jsp" method="get">
+							<input type="hidden" value="select-report-III-a" name="action">							
+							<th><select name="COURSE_ID">
+								<%  for(String course: courses) { %>
+  									 <option value="<%=course%>"><%=course%></option>
+  								<% } %>
+							</select></th>
+							<th><select name="FACULTY_ID">
+								<%  for(String prof: profs) { %>
+  									 <option value="<%=prof%>"><%=prof%></option>
+  								<% } %>
+							</select></th>
+							<th><select name="QUARTER">
+								<option value="FA">Fall</option>
+								<option value="WI">Winter</option>
+								<option value="SP">Spring</option>
+							</select></th>
+							<th><select name="YEAR">
+								<option value="2000">2000</option>
+							</select></th>
+							<th><input type="submit" value="Submit"></th>
+						</form>
+					</tr>
 				</table>
 				
 			</td>

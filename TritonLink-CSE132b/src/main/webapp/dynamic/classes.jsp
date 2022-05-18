@@ -57,8 +57,16 @@
 				if (action != null && action.equals("delete-classes")) {
 					conn.setAutoCommit(false);
 					
+					// delete from enroll to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.executeUpdate();
+					
 					// delete meeting instances to avoid foreign key violations
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
+					pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
 					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
@@ -73,16 +81,17 @@
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
 					
-					// delete from enroll to avoid foreign key violations
- 					pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
- 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					// delete section instances to avoid foreign key violations
+					pstmt = conn.prepareStatement("DELETE FROM section WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
-					pstmt = conn.prepareStatement("DELETE FROM classes WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ?;");
+					
+					pstmt = conn.prepareStatement("DELETE FROM classes WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ?;");
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.executeUpdate();
@@ -110,13 +119,76 @@
 					conn.setAutoCommit(true);
 				}
 				
+				// update section
+				if (action != null && action.equals("update-section")) {
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE section SET instructor_id = ?, enrollment_limit = ? WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
+					
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("INSTRUCTOR_ID")));
+					pstmt.setInt(2, Integer.parseInt(request.getParameter("ENROLLMENT_LIMIT")));
+					pstmt.setInt(3, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(4, request.getParameter("TITLE"));
+					pstmt.setString(5, request.getParameter("QUARTER"));
+					pstmt.setInt(6, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(7, request.getParameter("SECTION_ID"));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
+				// delete section
+				if (action != null && action.equals("delete-section")) {
+					conn.setAutoCommit(false);
+					
+					// delete from enroll to avoid foreign key violations
+ 					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM enroll WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
+ 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.executeUpdate();
+					
+					// delete meeting instances to avoid foreign key violations
+					pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.executeUpdate();
+					
+					// delete review_session instances to avoid foreign key violations
+					pstmt = conn.prepareStatement("DELETE FROM review_session WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.executeUpdate();
+					
+					pstmt = conn.prepareStatement("DELETE FROM section WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ?;");
+					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+					pstmt.setString(2, request.getParameter("TITLE"));
+					pstmt.setString(3, request.getParameter("QUARTER"));
+					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					
+					pstmt.executeUpdate();
+					
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
+				
 				// insert meeting
 				if (action != null && action.equals("insert-meeting")) {
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO meeting VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
 					pstmt.setString(5, request.getParameter("SECTION_ID"));
@@ -135,18 +207,19 @@
 				// update meeting
 				if (action != null && action.equals("update-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("UPDATE meeting SET mandatory = ? WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("UPDATE meeting SET mandatory = ? WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
 					
 					pstmt.setString(1, request.getParameter("MANDATORY"));
 					pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(3, request.getParameter("CLASS_ID"));
+					pstmt.setString(3, request.getParameter("TITLE"));
 					pstmt.setString(4, request.getParameter("QUARTER"));
 					pstmt.setInt(5, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(6, request.getParameter("DAY"));
-					pstmt.setString(7, request.getParameter("START_TIME"));
-					pstmt.setString(8, request.getParameter("END_TIME"));
-					pstmt.setString(9, request.getParameter("ROOM"));
-					pstmt.setString(10, request.getParameter("TYPE"));
+					pstmt.setString(6, request.getParameter("SECTION_ID"));
+					pstmt.setString(7, request.getParameter("DAY"));
+					pstmt.setString(8, request.getParameter("START_TIME"));
+					pstmt.setString(9, request.getParameter("END_TIME"));
+					pstmt.setString(10, request.getParameter("ROOM"));
+					pstmt.setString(11, request.getParameter("TYPE"));
 					
 					pstmt.executeUpdate();
 					
@@ -157,17 +230,18 @@
 				// delete meeting
 				if (action != null && action.equals("delete-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_id = ? AND quarter = ? AND year = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
+					PreparedStatement pstmt = conn.prepareStatement("DELETE FROM meeting WHERE course_id = ? AND class_title = ? AND quarter = ? AND year = ? AND section_id = ? AND day = ? AND start_time = ? AND end_time = ? AND room = ? AND type = ?;");
 					
 					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("CLASS_ID"));
+					pstmt.setString(2, request.getParameter("TITLE"));
 					pstmt.setString(3, request.getParameter("QUARTER"));
 					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(5, request.getParameter("DAY"));
-					pstmt.setString(6, request.getParameter("START_TIME"));
-					pstmt.setString(7, request.getParameter("END_TIME"));
-					pstmt.setString(8, request.getParameter("ROOM"));
-					pstmt.setString(9, request.getParameter("TYPE"));
+					pstmt.setString(5, request.getParameter("SECTION_ID"));
+					pstmt.setString(6, request.getParameter("DAY"));
+					pstmt.setString(7, request.getParameter("START_TIME"));
+					pstmt.setString(8, request.getParameter("END_TIME"));
+					pstmt.setString(9, request.getParameter("ROOM"));
+					pstmt.setString(10, request.getParameter("TYPE"));
 					
 					pstmt.executeUpdate();
 					
@@ -376,7 +450,7 @@
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="insert-meeting" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
@@ -406,7 +480,7 @@
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="update-meeting" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
@@ -436,7 +510,7 @@
 						<form action="classes.jsp" method="get">
 							<input type="hidden" value="delete-meeting" name="action">
 							<th><input value="" name="COURSE_ID" size="10"></th>
-							<th><input value="" name="CLASS_ID" size="10"></th>
+							<th><input value="" name="TITLE" size="10"></th>
 							<th><select name="QUARTER">
 								<option value="FA">Fall</option>
 								<option value="WI">Winter</option>
