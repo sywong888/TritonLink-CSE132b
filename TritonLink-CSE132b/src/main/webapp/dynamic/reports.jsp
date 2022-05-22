@@ -33,28 +33,33 @@
 				ResultSet currentStudentRset = currentStudentStmt.executeQuery();
 				ArrayList<String> currentStudents = new ArrayList<>();
 				
-				while (currentStudentRset.next()) {
-					currentStudents.add(currentStudentRset.getString("ssn"));
-					%>
-					<%--Display information for student currently enrolled--%>
-					<table>
+				%>
+				<table>
 						<tr>
 							<th>SSN</th>	
 							<th>First Name</th>
 							<th>Middle Name</th>
 							<th>Last Name</th>
 						</tr>
+				<%
+				
+				while (currentStudentRset.next()) {
+					currentStudents.add(currentStudentRset.getString("ssn"));
+					%>
+					<%--Display information for student currently enrolled--%>
+					
 						<tr>
 							<td><%= currentStudentRset.getString("ssn") %></td>
 							<td><%= currentStudentRset.getString("first_name") %></td>
 							<td><%= currentStudentRset.getString("middle_name") %></td>
 							<td><%= currentStudentRset.getString("last_name") %></td>
 						</tr>
-					</table>
 					<%
 				}
 				currentStudentRset.close();
 				%>
+				</table>
+				
 
 				<%--HTML SELECT for student currently enrolled--%>
 				<table>
@@ -75,7 +80,7 @@
 						</form>
 					</tr>
 				</table>
-				<table>
+				
 					
 					<% 
 					if (action != null && action.equals("select-report-I-a")) {
@@ -86,16 +91,20 @@
 						classesTaken.setString(1, ssn);
 						ResultSet classesRset = classesTaken.executeQuery();
 						
-						while (classesRset.next()) {
-							%>
+						%>
+						<table>
 							<tr>
 								<th>Course ID</th>
 								<th>Class Title</th>
 								<th>Quarter</th>
 								<th>Year</th>
-								<th>Title</th>
+								<th>Section ID</th>
 								<th>Units Taken</th>
 							</tr>
+						<%
+						
+						while (classesRset.next()) {
+							%>
 							<tr>
 								<td><%= classesRset.getString("course_id") %></td>
 								<td><%= classesRset.getString("class_title") %></td>
@@ -106,16 +115,15 @@
 							</tr>
 							<%
 						}
-
+						%>
+						</table>
+						<%
 						classesRset.close();
 						conn.commit();
 						conn.setAutoCommit(true);
-					
 					}
-					%>
-				</table>
-				<%
-				
+					
+
 				/* Reports I b */
 				%>
 				<h4>b)</h4>
@@ -145,12 +153,10 @@
 						</tr>
 					<%
 				}
-				%>
-				</table>
-				<%
 				classesRset.close();
 				%>
-			
+				</table>
+				
 				<table>
 					<%--Report I b--%>
 					<tr>
@@ -168,6 +174,7 @@
 						</form>
 					</tr>
 				</table>
+				
 				<table>
 					<% 
 					if (action != null && action.equals("select-report-I-b")) {
@@ -228,28 +235,32 @@
 				PreparedStatement enrollStmt = conn.prepareStatement("SELECT distinct s.ssn, s.first_name, s.middle_name, s.last_name FROM enroll e, student s WHERE s.ssn = e.ssn;");
 				ResultSet enrollRset = enrollStmt.executeQuery();
 				ArrayList<String> allEnroll = new ArrayList<>();
+				
+				%>
+				<table>
+					<tr>
+						<th>SSN</th>	
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+					</tr>
+				<%
+				
 				while (enrollRset.next()) {
 					allEnroll.add(enrollRset.getString("ssn"));
 					%>
 					<%--Display information for all students ever enrolled--%>
-					<table>
-						<tr>
-							<th>SSN</th>	
-							<th>First Name</th>
-							<th>Middle Name</th>
-							<th>Last Name</th>
-						</tr>
 						<tr>
 							<td><%= enrollRset.getString("ssn") %></td>
 							<td><%= enrollRset.getString("first_name") %></td>
 							<td><%= enrollRset.getString("middle_name") %></td>
 							<td><%= enrollRset.getString("last_name") %></td>
 						</tr>
-					</table>
 					<%
 				}
 				enrollRset.close();
 				%>
+				</table>
 				
 				<table>
 					<%--Report I c--%>
@@ -268,9 +279,9 @@
 						</form>
 					</tr>
 				</table>
-				<table>
-					<% 
-					if (action != null && action.equals("select-report-I-c")) {
+				
+				<% 
+				if (action != null && action.equals("select-report-I-c")) {
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
@@ -278,14 +289,15 @@
 						classesTaken.setString(1, ssn);
 						ResultSet takenRset = classesTaken.executeQuery();
 						%>
-						<tr>
-							<th>Course ID</th>
-							<th>Class Title</th>
-							<th>Quarter</th>
-							<th>Year</th>
-							<th>Units Taken</th>
-							<th>Grade</th>
-						</tr>
+						<table>
+							<tr>
+								<th>Course ID</th>
+								<th>Class Title</th>
+								<th>Quarter</th>
+								<th>Year</th>
+								<th>Units Taken</th>
+								<th>Grade</th>
+							</tr>
 						<%
 						while (takenRset.next()) {	
 							%>
@@ -300,16 +312,20 @@
 							<%
 						}
 						takenRset.close();
+						%>
+						</table>
+						<% 
 						
 						PreparedStatement quarterStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT c.quarter, c.year, AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade GROUP BY quarter, year;");
 						quarterStmt.setString(1, ssn);
 						ResultSet quarterRset = quarterStmt.executeQuery();
 						%>
-						<tr>
-							<th>Quarter</th>
-							<th>Year</th>
-							<th>GPA</th>
-						</tr>
+						<table>
+							<tr>
+								<th>Quarter</th>
+								<th>Year</th>
+								<th>GPA</th>
+							</tr>
 						<%
 						while (quarterRset.next()) {	
 							%>
@@ -321,14 +337,18 @@
 							<%
 						}
 						quarterRset.close();
+						%>
+						</table>
+						<%
 						
 						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;");
 						cumulativeStmt.setString(1, ssn);
 						ResultSet cumulativeRset = cumulativeStmt.executeQuery();
 						%>
-						<tr>
-							<th>Cumulative GPA</th>
-						</tr>
+						<table>
+							<tr>
+								<th>Cumulative GPA</th>
+							</tr>
 						<%
 						while (cumulativeRset.next()) {	
 							%>
@@ -338,14 +358,16 @@
 							<%
 						}
 						cumulativeRset.close();
+						%>
+						</table>
+						<%
 						
 						conn.commit();
 						conn.setAutoCommit(true);
-					}
-					%>
-				</table>
-				<% 
+				}
+				%>	
 				
+				<%
 				/* Reports I d */
 				%>
 				<h4>d)</h4>
@@ -353,41 +375,54 @@
 				<%
 				
 				// HTML select for undergraduates enrolled in the current quarter
-				PreparedStatement currentUndergradStmt = conn.prepareStatement("SELECT e.ssn, s.first_name, s.middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND (s.student_type = 'bsc' OR s.student_type = 'ba') AND e.quarter = 'SP' AND e.year = 2022;");
+				PreparedStatement currentUndergradStmt = conn.prepareStatement("SELECT distinct e.ssn, s.first_name, s.middle_name, s.last_name FROM student s, enroll e WHERE s.ssn = e.ssn AND s.student_type = 'bs' AND e.quarter = 'SP' AND e.year = 2022;");
 				ResultSet currentUndergradRset = currentUndergradStmt.executeQuery();
 				ArrayList<String> currentUndergrads = new ArrayList<>();
+				
+				%>
+				<table>
+					<tr>
+						<th>SSN</th>	
+						<th>First Name</th>
+						<th>Middle Name</th>
+						<th>Last Name</th>
+					</tr>
+				<%
+				
 				while (currentUndergradRset.next()) {
 					currentUndergrads.add(currentUndergradRset.getString("ssn"));
 					%>
 					<%--Display information for all undergraduates currently enrolled--%>
-					<table>
-						<tr>
-							<th>SSN</th>	
-							<th>First Name</th>
-							<th>Middle Name</th>
-							<th>Last Name</th>
-						</tr>
 						<tr>
 							<td><%= currentUndergradRset.getString("ssn") %></td>
 							<td><%= currentUndergradRset.getString("first_name") %></td>
 							<td><%= currentUndergradRset.getString("middle_name") %></td>
 							<td><%= currentUndergradRset.getString("last_name") %></td>
 						</tr>
-					</table>
 					<%
 				}
-				currentUndergradRset.close();
 				
-				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'bsc';");
+				currentUndergradRset.close();
+				%>
+				</table>
+				
+				<%
+				PreparedStatement csDnoStmt = conn.prepareStatement("SELECT dno FROM department WHERE dname = 'CSE';");
+				ResultSet csDnoRset = csDnoStmt.executeQuery();
+				csDnoRset.next();
+				int csDno = csDnoRset.getInt("dno");
+				csDnoRset.close();
+				
+				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'bs' AND u.dno = ?;");
+				selectId2.setInt(1, 1);
 				ResultSet rsetId2 = selectId2.executeQuery();
 				ArrayList<String> bscDegrees = new ArrayList<>();
 				while (rsetId2.next()) {
 					bscDegrees.add(rsetId2.getString("degree_number"));
-					
 				}
 				rsetId2.close();
 				%>
-			
+
 				<table>
 					<%--Report I d--%>
 					<tr>
@@ -411,34 +446,41 @@
 						</form>
 					</tr>
 				</table>
-				<table>
-					<% 
+				
+				<% 
 					if (action != null && action.equals("select-report-I-d")) {
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						String degreeNumber = request.getParameter("DEGREE_NUMBER");
 						
-						PreparedStatement unitStmt = conn.prepareStatement("SELECT u.total_units FROM ucsd_degree u WHERE u.degree_number = ?;");
-						unitStmt.setInt(1, Integer.parseInt(degreeNumber));
-						ResultSet unitRset = unitStmt.executeQuery();
-						while (unitRset.next()) {
+						%>
+						<table>
+						<%
+						
+						PreparedStatement totalUnitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), byCategory AS (SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL) SELECT SUM(units_left) AS total_units FROM byCategory;");
+						totalUnitsLeft.setInt(1, Integer.parseInt(degreeNumber));
+						totalUnitsLeft.setString(2, ssn);
+						totalUnitsLeft.setInt(3, Integer.parseInt(degreeNumber));
+						ResultSet totalUnitsLeftRset = totalUnitsLeft.executeQuery();
+						while (totalUnitsLeftRset.next()) {
 							%>
 							<tr>
 								<th>Undergraduate student must take this many units to earn the degree:</th>
 							</tr>
 							<tr>
-								<td><%= unitRset.getString("total_units") %></td>
+								<td><%= totalUnitsLeftRset.getString("total_units") %></td>
 							</tr>
 							<%
 						}
-						unitRset.close();
-						
-						
+						totalUnitsLeftRset.close();
 						%>
-						<tr>
-							<th>Category</th>
-							<th>Units Left</th>
-						</tr>
+						</table>
+						
+						<table>
+							<tr>
+								<th>Category</th>
+								<th>Units Left</th>
+							</tr>
 						<%
 						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category) SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL");
 						unitsLeft.setInt(1, Integer.parseInt(degreeNumber));
@@ -454,13 +496,13 @@
 							<%
 						}
 						unitsLeftRset.close();
+						%>
+						</table>
+						<%
 						
 						conn.commit();
 						conn.setAutoCommit(true);
 					}
-					%>
-				</table>
-				<%
 				
 				/* Reports I e */
 				%>
@@ -500,9 +542,7 @@
 				ResultSet mastersDegreeRset = mastersDegreeStmt.executeQuery();
 				ArrayList<String> mastersDegrees = new ArrayList<>();
 				while (mastersDegreeRset.next()) {
-					// bscDegrees.add(rsetId2.getString("dname"));
 					mastersDegrees.add(mastersDegreeRset.getString("degree_number"));
-					
 				}
 				mastersDegreeRset.close();
 				%>
@@ -594,7 +634,6 @@
 					}
 					%>
 				</table>
-				<%
 				
 				/* Reports II a */
 				%>
@@ -625,9 +664,11 @@
 							<td><%= currentStudents2Rset.getString("middle_name") %></td>
 							<td><%= currentStudents2Rset.getString("last_name") %></td>
 						</tr>
-					</table>
 					<%
 				}
+				%>
+				</table>
+				<%
 				currentStudents2Rset.close();
 				%>
 				
@@ -650,37 +691,43 @@
 						</form>
 					</tr>
 				</table>
-				<table>
-					<tr>
-						<th>Course ID</th>	
-						<th>Class ID</th>
-					</tr>
 					<% 
 					if (action != null && action.equals("select-report-II-a")) {
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
-						PreparedStatement conflictStmt = conn.prepareStatement("WITH enrolled_meetings AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM enroll e, meeting m  WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id  AND e.class_title = m.class_title AND e.section_id = e.section_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM meeting m  WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em  WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time  AND em.course_id = m.course_id AND em.class_title = m.class_title AND em.section_id = m.section_id)) SELECT c.class_title FROM classes c WHERE c.quarter = 'SP' AND c.year = 2022 AND NOT EXISTS (SELECT * FROM section s WHERE c.course_id = s.course_id AND c.class_title = s.class_title AND c.quarter = s.quarter AND c.year = s.year AND NOT EXISTS (SELECT * FROM meeting_options mo, enrolled_meetings em WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarter = mo.quarter AND s.year = mo.year AND s.section_id = mo.section_id AND mo.day = em.day AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time) OR (mo.end_time > em.start_time AND mo.end_time < em.end_time) OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));");
+						PreparedStatement conflictStmt = conn.prepareStatement("WITH enrolled_meetings AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM enroll e, meeting m  WHERE e.ssn = ? AND e.quarter = 'SP' AND e.year = 2022 AND e.course_id = m.course_id  AND e.class_title = m.class_title AND e.section_id = e.section_id AND e.quarter = m.quarter AND e.year = m.year), meeting_options AS (SELECT m.quarter, m.year, m.day, m.start_time, m.end_time, m.course_id, m.class_title, m.section_id FROM meeting m  WHERE m.quarter = 'SP' AND m.year = 2022 AND NOT EXISTS (SELECT * FROM enrolled_meetings em  WHERE em.day = m.day AND em.start_time = m.start_time AND em.end_time = m.end_time AND em.course_id = m.course_id AND em.class_title = m.class_title AND em.section_id = m.section_id)) SELECT c.class_title, c.course_id FROM classes c WHERE c.quarter = 'SP' AND c.year = 2022 AND NOT EXISTS (SELECT * FROM section s WHERE c.course_id = s.course_id AND c.class_title = s.class_title AND c.quarter = s.quarter AND c.year = s.year AND NOT EXISTS (SELECT * FROM meeting_options mo, enrolled_meetings em WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarter = mo.quarter AND s.year = mo.year AND s.section_id = mo.section_id AND mo.day = em.day AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time) OR (mo.end_time > em.start_time AND mo.end_time < em.end_time) OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));");
 						conflictStmt.setString(1, ssn);
 						ResultSet conflictRset = conflictStmt.executeQuery();
+						
+						%>
+						<table>
+							<tr>
+								<th>Class Title</th>
+								<th>Course ID</th>
+							</tr>
+						<%
 						
 						while (conflictRset.next()) {
 							%>
 							<%--Display information for students currently enrolled--%>
 								<tr>
 									<td><%= conflictRset.getString("class_title") %></td>
+									<td><%= conflictRset.getString("course_id") %></td>
 								</tr>
-							</table>
 							<%
 						}
 						
+						%>
+						</table>
+						<%
 						conflictRset.close();
 						
 						conn.commit();
 						conn.setAutoCommit(true);
 					}
 					%>
-				</table>
+					
 				<%
 				
 				/* Reports II b */
@@ -707,9 +754,11 @@
 							<td><%= sectionRset.getString("course_id") %></td>
 							<td><%= sectionRset.getString("section_id") %></td>
 						</tr>
-					</table>
 					<%
 				}
+				%>
+				</table>
+				<%
 				sectionRset.close();
 				%>
 				
@@ -910,7 +959,94 @@
 						conn.setAutoCommit(true);
 					}
 					%>
-				
+					
+										<% 
+					if (action != null && action.equals("select-report-I-c")) {
+						conn.setAutoCommit(false);
+						String ssn = request.getParameter("SSN");
+						
+						PreparedStatement classesTaken = conn.prepareStatement("SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year;");
+						classesTaken.setString(1, ssn);
+						ResultSet takenRset = classesTaken.executeQuery();
+						%>
+						<table>
+							<tr>
+								<th>Course ID</th>
+								<th>Class Title</th>
+								<th>Quarter</th>
+								<th>Year</th>
+								<th>Units Taken</th>
+								<th>Grade</th>
+							</tr>
+						<%
+						while (takenRset.next()) {	
+							%>
+							<tr>
+								<td><%= takenRset.getString("course_id") %></td>
+								<td><%= takenRset.getString("class_title") %></td>
+								<td><%= takenRset.getString("quarter") %></td>
+								<td><%= takenRset.getString("year") %></td>
+								<td><%= takenRset.getString("units_taken") %></td>
+								<td><%= takenRset.getString("grade") %></td>
+							</tr>
+							<%
+						}
+						takenRset.close();
+						%>
+						</table>
+						<%
+						
+						PreparedStatement quarterStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT c.quarter, c.year, AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade GROUP BY quarter, year;");
+						quarterStmt.setString(1, ssn);
+						ResultSet quarterRset = quarterStmt.executeQuery();
+						%>
+						<table>
+							<tr>
+								<th>Quarter</th>
+								<th>Year</th>
+								<th>GPA</th>
+							</tr>
+						<%
+						while (quarterRset.next()) {	
+							%>
+							<tr>
+								<td><%= quarterRset.getString("quarter") %></td>
+								<td><%= quarterRset.getString("year") %></td>
+								<td><%= quarterRset.getString("average") %></td>
+							</tr>
+							<%
+						}
+						quarterRset.close();
+						%>
+						</table>
+						<%
+						
+						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;");
+						cumulativeStmt.setString(1, ssn);
+						ResultSet cumulativeRset = cumulativeStmt.executeQuery();
+						%>
+						<table>
+							<tr>
+								<th>Cumulative GPA</th>
+							</tr>
+						<%
+						while (cumulativeRset.next()) {	
+							%>
+							<tr>
+								<td><%= cumulativeRset.getString("average") %></td>
+							</tr>
+							<%
+						}
+						cumulativeRset.close();
+						%>
+						</table>
+						<%
+						
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+				%>
+
 				
 			</td>
 		</tr>	
