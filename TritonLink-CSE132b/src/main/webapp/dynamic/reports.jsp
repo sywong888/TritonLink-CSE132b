@@ -787,13 +787,130 @@
 								<option value="WI">Winter</option>
 								<option value="SP">Spring</option>
 							</select></th>
-							<th><select name="YEAR">
-								<option value="2000">2000</option>
-							</select></th>
+							<th><input value="" name="YEAR" size="10"></th>
 							<th><input type="submit" value="Submit"></th>
 						</form>
 					</tr>
 				</table>
+				
+					<% 
+					if (action != null && action.equals("select-report-III-a")) {
+						conn.setAutoCommit(false);
+						int course = Integer.parseInt(request.getParameter("COURSE_ID"));
+						int faculty = Integer.parseInt(request.getParameter("FACULTY_ID"));
+						String quarter = request.getParameter("QUARTER");
+						int year = Integer.parseInt(request.getParameter("YEAR"));
+						
+						PreparedStatement countStmt1 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id FROM section s WHERE s.quarter = ? AND s.year = ? AND s.instructor_id = ? AND s.course_id = ?), studentGrades AS (SELECT e.grade FROM enroll e WHERE e.quarter = ? AND e.year = ? AND e.course_id = ? AND e.section_id IN (SELECT * FROM profSections)) (SELECT 'A' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'A') UNION (SELECT 'B' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'B') UNION SELECT 'C' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'C' UNION SELECT 'D' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'D' UNION SELECT 'other' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D';");
+						countStmt1.setString(1, quarter);
+						countStmt1.setInt(2, year);
+						countStmt1.setInt(3, faculty);
+						countStmt1.setInt(4, course);
+						countStmt1.setString(5, quarter);
+						countStmt1.setInt(6, year);
+						countStmt1.setInt(7, course);
+						ResultSet countRset1 = countStmt1.executeQuery();
+						
+						%>
+						<h4>Produce the count of grades that professor Y gave at quarter Z to the students taking course X:</h4>
+						<table>
+							<tr>
+								<th>Grade</th>
+								<th>Count</th>
+							</tr>
+						<%
+						
+						while (countRset1.next()) {
+							%>
+								<tr>
+									<td><%= countRset1.getString("grade") %></td>
+									<td><%= countRset1.getString("count") %></td>
+								</tr>
+							<%
+						}
+						%></table><%
+						countRset1.close();
+						
+						PreparedStatement countStmt2 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?), studentGrades AS (SELECT e.grade FROM enroll e WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year)) SELECT 'A' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'A' UNION SELECT 'B' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'B' UNION SELECT 'C' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'C' UNION SELECT 'D' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'D' UNION SELECT 'other' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D';");
+						countStmt2.setInt(1, faculty);
+						countStmt2.setInt(2, course);
+						countStmt2.setInt(3, course);
+						ResultSet countRset2 = countStmt2.executeQuery();
+						
+						%>
+						<h4>Produce the count of grades that professor Y has given for course X over the years:</h4>
+						<table>
+							<tr>
+								<th>Grade</th>
+								<th>Count</th>
+							</tr>
+						<%
+						
+						while (countRset2.next()) {
+							%>
+								<tr>
+									<td><%= countRset2.getString("grade") %></td>
+									<td><%= countRset2.getString("count") %></td>
+								</tr>
+							<%
+						}
+						%></table><%
+						countRset2.close();
+						
+						PreparedStatement countStmt3 = conn.prepareStatement("WITH allSections AS (SELECT s.section_id FROM section s WHERE s.course_id = ?), studentGrades AS (SELECT e.grade FROM enroll e WHERE e.course_id = ? AND e.section_id IN (SELECT * FROM allSections)) SELECT 'A' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'A' UNION SELECT 'B' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'B' UNION SELECT 'C' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'C' UNION SELECT 'D' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'D' UNION SELECT 'other' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D';");
+						countStmt3.setInt(1, course);
+						countStmt3.setInt(2, course);
+						ResultSet countRset3 = countStmt3.executeQuery();
+						
+						%>
+						<h4>Produce the count of grades given to students in course X over the years:</h4>
+						<table>
+							<tr>
+								<th>Grade</th>
+								<th>Count</th>
+							</tr>
+						<%
+						
+						while (countRset3.next()) {
+							%>
+								<tr>
+									<td><%= countRset3.getString("grade") %></td>
+									<td><%= countRset3.getString("count") %></td>
+								</tr>
+							<%
+						}
+						%></table><%
+						countRset3.close();
+						
+						PreparedStatement countStmt4 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?) SELECT AVG(gc.number_grade) AS gpa FROM enroll e, grade_conversion gc WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year) AND gc.letter_grade = e.grade;");
+						countStmt4.setInt(1, faculty);
+						countStmt4.setInt(2, course);
+						countStmt4.setInt(3, course);
+						ResultSet countRset4 = countStmt4.executeQuery();
+						
+						%>
+						<h4>Produce the grade point average that professor Y has given at course X over the years:</h4>
+						<table>
+							<tr>
+								<th>Grade Point Average</th>
+							</tr>
+						<%
+						
+						while (countRset4.next()) {
+							%>
+								<tr>
+									<td><%= countRset4.getString("gpa") %></td>
+								</tr>
+							<%
+						}
+						%></table><%
+						countRset4.close();
+						
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+					%>
+				
 				
 			</td>
 		</tr>	
