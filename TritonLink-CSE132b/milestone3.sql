@@ -90,6 +90,123 @@ OR (mo.end_time > em.start_time AND mo.end_time < em.end_time)
 OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) 
 OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));
 
+/* 2b */
+
+
+-- DROP TABLE yourtable;
+
+CREATE TABLE YourTable (start_d timestamp, end_d timestamp);
+
+do $$
+DECLARE
+    -- need to get variable for difference between dates (that the instructor inputs)
+
+    start_date date := '2022-05-09'; -- input of start date from instructor
+    end_date date := '2022-05-13'; -- input of end date from instructor
+    start_time time := '08:00:00';
+    end_time time := '20:00:00';
+    first timestamp := cast(concat(start_date, ' ', start_time) as timestamp);
+    second timestamp := cast(concat(start_date, ' ', end_time) as timestamp);
+    diff_day integer := end_date - start_date;
+begin
+  for r in 0..diff_day loop
+    RAISE NOTICE 'iteration: %', r;
+    INSERT INTO YourTable (start_d, end_d)
+    VALUES (first, second);
+    first := first + INTERVAL '1 day';
+    second := second + INTERVAL '1 day';
+  end loop;
+end $$;
+
+
+-- https://stackoverflow.com/questions/27489564/for-each-day-between-two-dates-add-a-row-with-the-same-info-but-only-that-day-i
+
+with RECURSIVE cte AS (SELECT TO_CHAR(start_d, 'MM-DD') AS month_day,
+                              CASE
+                                  WHEN extract(isodow from start_d) = 1 THEN 'm'
+                                  WHEN extract(isodow from start_d) = 2 THEN 't'
+                                  WHEN extract(isodow from start_d) = 3 THEN 'w'
+                                  WHEN extract(isodow from start_d) = 4 THEN 'r'
+                                  WHEN extract(isodow from start_d) = 5 THEN 'f'
+                                  WHEN extract(isodow from start_d) = 6 THEN 'sat'
+                                  WHEN extract(isodow from start_d) = 7 THEN 'sun'
+                            END AS day_of_week,
+                           start_d,
+                           end_d,
+                           start_d::time as start_t,
+                           end_d::time as end_t
+                       FROM YourTable
+                       UNION  ALL
+                       SELECT TO_CHAR(start_d, 'MM-DD') AS month_day,
+                              CASE
+                                  WHEN extract(isodow from start_d) = 1 THEN 'm'
+                                  WHEN extract(isodow from start_d) = 2 THEN 't'
+                                  WHEN extract(isodow from start_d) = 3 THEN 'w'
+                                  WHEN extract(isodow from start_d) = 4 THEN 'r'
+                                  WHEN extract(isodow from start_d) = 5 THEN 'f'
+                                  WHEN extract(isodow from start_d) = 6 THEN 'sat'
+                                  WHEN extract(isodow from start_d) = 7 THEN 'sun'
+                            END AS day_of_week,
+                              start_d + INTERVAL '1 hour',
+                              end_d,
+                              (start_d + INTERVAL '1 hour')::time as start_t,
+                              end_d::time as end_t
+                       FROM cte
+                       WHERE start_d < end_d - INTERVAL '1 hour'),
+
+    student_in_section AS (
+        select e.ssn, e.course_id, e.class_title, e.section_id from enroll e
+                 where e.class_title = 'CSE998-1' -- need to input the class
+                 and e.section_id = 'S998-1' -- need to input the section
+    ),
+
+    all_student_section AS (
+        select e.* from enroll e, student_in_section sis
+                 where e.ssn = sis.ssn
+                 and e.quarter = 'SP'
+                 and e.year = 2022
+    ),
+
+    all_student_section_time AS (
+        select distinct m.class_title, m.section_id, m.day, m.start_time::time, m.end_time::time, m.type
+        from all_student_section all_ss, meeting m
+                 where all_ss.class_title = m.class_title
+                 and all_ss.section_id = m.section_id
+    ),
+
+    filtered_cte as (
+        SELECT month_day, day_of_week, start_d, start_d + INTERVAL '1 hour' AS end_d,
+               start_d::time as start_t, (start_d + INTERVAL '1 hour')::time as end_t
+        FROM cte
+        ORDER BY start_d
+    )
+
+SELECT fc.month_day, fc.day_of_week, fc.start_t, fc.end_t FROM filtered_cte fc
+             WHERE NOT EXISTS (
+                 SELECT * from all_student_section_time all_sst
+                 WHERE
+                 fc.day_of_week = all_sst.day AND
+                 (
+                     (all_sst.start_time < fc.start_t AND fc.start_t < all_sst.end_time) -- student_time before or at option start and end before option end
+                     OR (all_sst.start_time < fc.end_t AND fc.end_t < all_sst.end_time) --
+                     OR (fc.start_t < all_sst.start_time AND all_sst.end_time < fc.end_t) -- student_time is entirely between option
+                     OR (all_sst.start_time <= fc.start_t AND fc.end_t <= all_sst.end_time) -- option is entirely between student_time
+                 )
+            )
+ORDER BY start_d;
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* 3a */
 WITH profSections AS 
 (SELECT s.section_id FROM section s 
