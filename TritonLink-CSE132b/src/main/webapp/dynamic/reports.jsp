@@ -736,7 +736,32 @@
 				/* Reports II b */
 				%>
 				<h4>b)</h4>
-				<h4>Sections given in the given quarter:</h4>
+				<h4>Classes in the current quarter:</h4>
+				<table>
+					<tr>
+						<th>Class Title</th>	
+					</tr>
+				<%
+				
+				// HTML select for classes given in the current quarter
+				PreparedStatement currentClassesStmt = conn.prepareStatement("SELECT class_title FROM classes c WHERE c.quarter = 'SP' AND c.year = 2022;");
+				ResultSet currentClassesRset = currentClassesStmt.executeQuery();
+				ArrayList<String> currentClasses = new ArrayList<>();
+				
+				while (currentClassesRset.next()) {
+					currentClasses.add(currentClassesRset.getString("class_title"));
+					%>
+					<%--Display information for faculty--%>
+						<tr>
+							<td><%= currentClassesRset.getString("class_title") %></td>
+						</tr>
+					<%
+				}
+				currentClassesRset.close();
+				%>
+				</table>
+				
+				<h4>Sections in the current quarter:</h4>
 				<table>
 					<tr>
 						<th>Course ID</th>	
@@ -765,33 +790,6 @@
 				sectionRset.close();
 				%>
 				
-				<h4>All professors:</h4>
-				<table>
-					<tr>
-						<th>Faculty ID</th>	
-					</tr>
-				<%
-				
-				// HTML select for sections given in the current quarter
-				PreparedStatement facultyStmt = conn.prepareStatement("SELECT faculty_id FROM faculty;");
-				ResultSet facultyRset = facultyStmt.executeQuery();
-				ArrayList<String> allProfs = new ArrayList<>();
-				
-				while (facultyRset.next()) {
-					allProfs.add(facultyRset.getString("faculty_id"));
-					%>
-					<%--Display information for faculty--%>
-						<tr>
-							<td><%= facultyRset.getString("faculty_id") %></td>
-						</tr>
-					<%
-				}
-				%>
-				</table>
-				<%
-				facultyRset.close();
-				%>
-				
 				<%--HTML SELECT for professor and section currently enrolled--%>
 				<table>
 					<tr>
@@ -805,7 +803,11 @@
 					<tr>
 						<form action="reports.jsp" method="get">
 							<input type="hidden" value="select-report-II-b" name="action">	
-							<th><input value="" name="CLASS_TITLE" size="10"></th>						
+							<th><select name="CLASS_TITLE">
+								<%  for(String c: currentClasses) { %>
+  									 <option value="<%=c%>"><%=c%></option>
+  								<% } %>
+							</select></th>					
 							<th><select name="SECTION_ID">
 								<%  for(String section: sections) { %>
   									 <option value="<%=section%>"><%=section%></option>
@@ -822,16 +824,81 @@
 				if (action != null && action.equals("select-report-II-b")) {
 					conn.setAutoCommit(false);
 					
-					String start = request.getParameter("START_DATE");
-					String end = request.getParameter("END_DATE");
+					LocalDate start = LocalDate.parse(request.getParameter("START_DATE"));
+					LocalDate end = LocalDate.parse(request.getParameter("END_DATE")).plusDays(1);
+					
+					Statement createTableStmt = conn.createStatement();
+					createTableStmt.executeUpdate("DROP TABLE IF EXISTS session_options;");
+					createTableStmt.executeUpdate("CREATE TABLE session_options (date varchar(255), day varchar(255), start_time varchar(255), end_time varchar(255))");
+					
+					List<LocalDate> dates = start.datesUntil(end).collect(Collectors.toList());
+					
+					for (LocalDate ld: dates) {
+						String date = "" + ld.getMonth() + " " + ld.getDayOfMonth() + ", " + ld.getYear();
+						String dayCaps = "" + ld.getDayOfWeek();
+						String day = "";
+						switch (dayCaps) {
+							case "MONDAY":
+								day = "M";
+								break;
+							case "TUESDAY":
+								day = "T";
+								break;
+							case "WEDNESDAY":
+								day = "W";
+								break;
+							case "THURSDAY":
+								day = "R";
+								break;
+							case "FRIDAY":
+								day = "F";
+								break;
+							case "SATURDAY":
+								day = "SAT";
+								break;
+							case "SUNDAY":
+								day = "SUN";
+								break;
+						}
+						int hour = 8;
+						
+						while (hour < 20) {
+							String startTime = "";
+							if (hour == 8 || hour == 9) {
+								startTime += "0" + hour + ":00"; 
+							} else {
+								startTime += hour + ":00";
+							}
+							
+							String endTime = "";
+							if (hour == 8) {
+								endTime += "0" + (hour + 1) + ":00"; 
+							} else {
+								endTime += (hour + 1) + ":00";
+							}
+							
+							PreparedStatement insertStmt = conn.prepareStatement("INSERT INTO session_options VALUES(?, ?, ?, ?);");
+							insertStmt.setString(1, date);
+							insertStmt.setString(2, day);
+							insertStmt.setString(3, startTime);
+							insertStmt.setString(4, endTime);
+							insertStmt.executeUpdate();
+							
+							hour++;
+						}
+					}
+					
+					PreparedStatement reviewTimesStmt = conn.prepareStatement("WITH students_in_section AS (SELECT e.ssn FROM enroll e WHERE e.class_title = ? AND e.section_id = ?), sections_of_students AS (SELECT e.class_title, e.section_id FROM enroll e, students_in_section sis WHERE e.ssn = e.ssn AND e.quarter = 'SP' AND e.year = 2022), meetings_of_students AS (SELECT m.day, m.start_time, m.end_time FROM sections_of_students sis, meeting m WHERE sis.class_title = m.class_title AND sis.section_id = m.section_id) SELECT so.date, so.day, so.start_time, so.end_time FROM session_options so WHERE NOT EXISTS (SELECT * FROM meetings_of_students mos WHERE so.day = mos.day AND ((so.start_time > mos.start_time AND so.start_time < mos.end_time) OR (so.end_time > mos.start_time AND so.end_time < mos.end_time) OR (so.start_time <= mos.start_time AND so.end_time >= mos.end_time) OR (so.start_time >= mos.start_time AND so.end_time <= mos.end_time)));");
+					reviewTimesStmt.setString(1, request.getParameter("CLASS_TITLE"));
+					reviewTimesStmt.setString(2, request.getParameter("SECTION_ID"));
+					ResultSet reviewTimesRset = reviewTimesStmt.executeQuery();
  					
-  					Statement createTableStmt = conn.createStatement();
+  					/* Statement createTableStmt = conn.createStatement();
   					createTableStmt.executeUpdate("DROP TABLE IF EXISTS yourtable;");
-  					createTableStmt.executeUpdate("CREATE TABLE YourTable (start_d timestamp, end_d timestamp);");
+  					createTableStmt.executeUpdate("CREATE TABLE YourTable (start_d timestamp, end_d timestamp);"); */
   					
-  					String loop = "do $$ DECLARE start_date date := " + start + "::text::date; end_date date := " + end + "::text::date; start_time time := '08:00:00'; end_time time := '20:00:00'; first timestamp := cast(concat(start_date, ' ', start_time) as timestamp); second timestamp := cast(concat(start_date, ' ', end_time) as timestamp); diff_day integer := end_date - start_date; begin for r in 0..diff_day loop RAISE NOTICE 'iteration: %', r; INSERT INTO YourTable (start_d, end_d) VALUES (first, second); first := first + INTERVAL '1 day'; second := second + INTERVAL '1 day'; end loop; end $$;";
-  					
-  					createTableStmt.executeUpdate(loop);
+  					//String loop = "do $$ DECLARE start_date date := '" + start + "'; end_date date := '" + end + "'; start_time time := '08:00:00'; end_time time := '20:00:00'; first timestamp := cast(concat(start_date, ' ', start_time) as timestamp); second timestamp := cast(concat(start_date, ' ', end_time) as timestamp); diff_day integer := end_date - start_date; begin for r in 0..diff_day loop RAISE NOTICE 'iteration: %', r; INSERT INTO YourTable (start_d, end_d) VALUES (first, second); first := first + INTERVAL '1 day'; second := second + INTERVAL '1 day'; end loop; end $$;";
+  					//createTableStmt.executeUpdate(loop);
  					//PreparedStatement datesBetweenStmt = conn.prepareStatement("do $$ DECLARE start_date date := ?; end_date date := ?; start_time time := '08:00:00'; end_time time := '20:00:00'; first timestamp := cast(concat(start_date, ' ', start_time) as timestamp); second timestamp := cast(concat(start_date, ' ', end_time) as timestamp); diff_day integer := end_date - start_date; begin for r in 0..diff_day loop RAISE NOTICE 'iteration: %', r; INSERT INTO YourTable (start_d, end_d) VALUES (first, second); first := first + INTERVAL '1 day'; second := second + INTERVAL '1 day'; end loop; end $$;");
 /*  					datesBetweenStmt.setString(1, start);
  					datesBetweenStmt.setString(2, end);
@@ -841,33 +908,31 @@
 					//ResultSet availableRset = availableStmt.executeQuery();
 					
   					%>
-<%-- 					<table>
+ 					<table>
 						<tr>
-							<th>Month-Day</th>
-							<th>Day of the Week</th>
+							<th>Date</th>
+							<th>Day</th>
 							<th>Start Time</th>
 							<th>End Time</th>
 						</tr>
 					<%
 					
-					while (availableRset.next()) {
+					while (reviewTimesRset.next()) {
 						%>
-						Display information for students currently enrolled
 							<tr>
-								<td><%= availableRset.getString("month_day") %></td>
-								<td><%= availableRset.getString("day_of_week") %></td>
-								<td><%= availableRset.getString("start_t") %></td>
-								<td><%= availableRset.getString("end_t") %></td>
+								<td><%= reviewTimesRset.getString("date") %></td>
+								<td><%= reviewTimesRset.getString("day") %></td>
+								<td><%= reviewTimesRset.getString("start_time") %></td>
+								<td><%= reviewTimesRset.getString("end_time") %></td>
 							</tr>
 						<%
 					}
 					
 					%>
-					</table> --%>
+					</table>
 					<%
-  					
-  					
-  					
+
+					reviewTimesRset.close();
   					conn.commit();
 					conn.setAutoCommit(true);
 				} 
