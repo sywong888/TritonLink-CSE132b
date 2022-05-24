@@ -409,21 +409,34 @@
 				</table>
 				
 				<%
-				PreparedStatement csDnoStmt = conn.prepareStatement("SELECT dno FROM department WHERE dname = 'CSE';");
-				ResultSet csDnoRset = csDnoStmt.executeQuery();
-				csDnoRset.next();
-				int csDno = csDnoRset.getInt("dno");
-				csDnoRset.close();
-				
-				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number FROM ucsd_degree u WHERE u.degree_type = 'bs' AND u.dno = ?;");
-				selectId2.setInt(1, 1);
+				PreparedStatement selectId2 = conn.prepareStatement("SELECT u.degree_number, u.degree_type, u.dno FROM ucsd_degree u, department d WHERE u.degree_type = 'bs' AND d.dname = 'CSE' AND u.dno = d.dno;");
 				ResultSet rsetId2 = selectId2.executeQuery();
 				ArrayList<String> bscDegrees = new ArrayList<>();
+				
+				%>
+				<h4>BSC Degrees:</h4>
+				<table>
+					<tr>
+						<th>Degree Number</th>	
+						<th>Degree Type</th>
+						<th>Department Number</th>
+					</tr>
+				<%
+				
 				while (rsetId2.next()) {
 					bscDegrees.add(rsetId2.getString("degree_number"));
+					%>
+					<%--Display information for bsc degrees--%>
+						<tr>
+							<td><%= rsetId2.getString("degree_number") %></td>
+							<td><%= rsetId2.getString("degree_type") %></td>
+							<td><%= rsetId2.getString("dno") %></td>
+						</tr>
+					<%
 				}
 				rsetId2.close();
 				%>
+				</table>
 
 				<table>
 					<%--Report I d--%>
@@ -459,7 +472,7 @@
 						<table>
 						<%
 						
-						PreparedStatement totalUnitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), byCategory AS (SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL) SELECT SUM(units_left) AS total_units FROM byCategory;");
+						PreparedStatement totalUnitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), pos_units AS (SELECT ju.category AS category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL) SELECT SUM(units_left) AS total_units FROM pos_units;");
 						totalUnitsLeft.setInt(1, Integer.parseInt(degreeNumber));
 						totalUnitsLeft.setString(2, ssn);
 						totalUnitsLeft.setInt(3, Integer.parseInt(degreeNumber));
@@ -467,7 +480,7 @@
 						while (totalUnitsLeftRset.next()) {
 							%>
 							<tr>
-								<th>Undergraduate student must take this many units to earn the degree:</th>
+								<th>Undergraduate student has this many units left to earn the degree:</th>
 							</tr>
 							<tr>
 								<td><%= totalUnitsLeftRset.getString("total_units") %></td>
@@ -484,7 +497,7 @@
 								<th>Units Left</th>
 							</tr>
 						<%
-						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category) SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL");
+						PreparedStatement unitsLeft = conn.prepareStatement("WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), unitsTakenPerCategory AS (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), join_units AS (SELECT upc.category, upc.number_units, utpc.taken_units FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), pos_units AS (SELECT ju.category AS category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL), neg_units AS (SELECT ju.category AS category, 0 AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units <= 0) SELECT * FROM pos_units UNION SELECT * FROM neg_units;");
 						unitsLeft.setInt(1, Integer.parseInt(degreeNumber));
  						unitsLeft.setString(2, ssn);
 						unitsLeft.setInt(3, Integer.parseInt(degreeNumber));
