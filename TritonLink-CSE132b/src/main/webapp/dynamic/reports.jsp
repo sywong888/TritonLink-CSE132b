@@ -1084,7 +1084,8 @@
 						%></table><%
 						countRset3.close();
 						
-						PreparedStatement countStmt4 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?) SELECT AVG(gc.number_grade) AS gpa FROM enroll e, grade_conversion gc WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year) AND gc.letter_grade = e.grade;");
+						PreparedStatement countStmt4 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?) SELECT SUM(gc.number_grade * e.units_taken)/SUM(e.units_taken) AS gpa FROM enroll e, grade_conversion gc WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year) AND gc.letter_grade = e.grade;");
+						//PreparedStatement countStmt4 = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?) SELECT AVG(gc.number_grade) AS gpa FROM enroll e, grade_conversion gc WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year) AND gc.letter_grade = e.grade;");
 						countStmt4.setInt(1, faculty);
 						countStmt4.setInt(2, course);
 						countStmt4.setInt(3, course);
@@ -1113,8 +1114,8 @@
 					}
 					%>
 					
-										<% 
-					if (action != null && action.equals("select-report-I-c")) {
+										
+<%-- 					if (action != null && action.equals("select-report-I-c")) {
 						conn.setAutoCommit(false);
 						String ssn = request.getParameter("SSN");
 						
@@ -1174,7 +1175,7 @@
 						</table>
 						<%
 						
-						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH classes_taken AS (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;");
+						PreparedStatement cumulativeStmt = conn.prepareStatement("WITH profSections AS (SELECT s.section_id, s.quarter, s.year FROM section s WHERE s.instructor_id = ? AND s.course_id = ?) SELECT SUM(gc.number_grade * e.units_taken)/SUM(e.units_taken) AS gpa FROM enroll e, grade_conversion gc WHERE EXISTS (SELECT * FROM profSections ps WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year) AND gc.letter_grade = e.grade;");
 						cumulativeStmt.setString(1, ssn);
 						ResultSet cumulativeRset = cumulativeStmt.executeQuery();
 						%>
@@ -1198,7 +1199,7 @@
 						conn.commit();
 						conn.setAutoCommit(true);
 					}
-				%>
+				%> --%>
 
 				
 			</td>
