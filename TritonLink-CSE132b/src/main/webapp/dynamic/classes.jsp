@@ -7,6 +7,7 @@
 </head>
 <body>
 	<%@ page language="java" import="java.sql.*" %>
+	<%@ page language="java" import="javax.swing.*" %>
 	
 	<table>
 		<tr>
@@ -185,23 +186,31 @@
 				// insert meeting
 				if (action != null && action.equals("insert-meeting")) {
 					conn.setAutoCommit(false);
-					PreparedStatement pstmt = conn.prepareStatement("INSERT INTO meeting VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					try {
+						
+						PreparedStatement pstmt = conn.prepareStatement("INSERT INTO meeting VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						
+						pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
+						pstmt.setString(2, request.getParameter("TITLE"));
+						pstmt.setString(3, request.getParameter("QUARTER"));
+						pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
+						pstmt.setString(5, request.getParameter("SECTION_ID"));
+						pstmt.setString(6, request.getParameter("DAY"));
+						pstmt.setString(7, request.getParameter("START_TIME"));
+						pstmt.setString(8, request.getParameter("END_TIME"));
+						pstmt.setString(9, request.getParameter("ROOM"));
+						pstmt.setString(10, request.getParameter("TYPE"));
+						pstmt.setString(11, request.getParameter("MANDATORY"));
+						pstmt.executeUpdate();
+						
+					} catch (SQLException e) {
+						JFrame jFrame = new JFrame();
+				        JOptionPane.showMessageDialog(jFrame, e.getMessage());
+					} finally {
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
 					
-					pstmt.setInt(1, Integer.parseInt(request.getParameter("COURSE_ID")));
-					pstmt.setString(2, request.getParameter("TITLE"));
-					pstmt.setString(3, request.getParameter("QUARTER"));
-					pstmt.setInt(4, Integer.parseInt(request.getParameter("YEAR")));
-					pstmt.setString(5, request.getParameter("SECTION_ID"));
-					pstmt.setString(6, request.getParameter("DAY"));
-					pstmt.setString(7, request.getParameter("START_TIME"));
-					pstmt.setString(8, request.getParameter("END_TIME"));
-					pstmt.setString(9, request.getParameter("ROOM"));
-					pstmt.setString(10, request.getParameter("TYPE"));
-					pstmt.setString(11, request.getParameter("MANDATORY"));
-					pstmt.executeUpdate();
-					
-					conn.commit();
-					conn.setAutoCommit(true);
 				}
 				
 				// update meeting
