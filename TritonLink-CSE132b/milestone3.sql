@@ -13,36 +13,49 @@ WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.q
 WITH classes_taken AS 
 (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c 
 WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) 
-SELECT c.quarter, c.year, AVG(number_grade) AS average FROM classes_taken c, grade_conversion g 
-WHERE c.grade = g.letter_grade GROUP BY quarter, year;
+SELECT c.quarter, c.year, SUM(g.number_grade * c.units_taken)/SUM(c.units_taken) AS average 
+FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade GROUP BY quarter, year;");
+
 
 WITH classes_taken AS 
 (SELECT c.*, e.grade, e.units_taken FROM enroll e, student s, classes c 
 WHERE s.ssn = ? AND s.ssn = e.ssn AND c.class_title = e.class_title ORDER BY e.quarter, e.year) 
-SELECT AVG(number_grade) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;
+SELECT SUM(g.number_grade * c.units_taken)/SUM(c.units_taken) AS average FROM classes_taken c, grade_conversion g WHERE c.grade = g.letter_grade;
 
 /* 1d */
 SELECT u.total_units FROM ucsd_degree u WHERE u.degree_number = ?;
 
-WITH unitsPerCategory AS 
-(SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), 
-coursesTaken AS 
-(SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), 
+WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), 
+coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), 
 unitsTakenPerCategory AS 
 (SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr 
 WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), 
 join_units AS 
 (SELECT upc.category, upc.number_units, utpc.taken_units 
-FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category)
-SELECT ju.category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left FROM join_units ju 
-WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL;
+FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), 
+pos_units AS (SELECT ju.category AS category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left 
+FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL)
+SELECT SUM(units_left) AS total_units FROM pos_units;
+
+WITH unitsPerCategory AS (SELECT category, number_units FROM degree_requirement WHERE degree_number = ?), 
+coursesTaken AS (SELECT e.course_id, e.units_taken FROM enroll e WHERE e.ssn = ?), 
+unitsTakenPerCategory AS 
+(SELECT cr.category, SUM(units_taken) AS taken_units FROM coursesTaken ct, category_requirements cr 
+WHERE degree_number = ? AND ct.course_id = cr.course_id GROUP BY cr.category), 
+join_units AS 
+(SELECT upc.category, upc.number_units, utpc.taken_units 
+FROM unitsPerCategory upc LEFT JOIN unitsTakenPerCategory utpc ON upc.category = utpc.category), 
+pos_units AS (SELECT ju.category AS category, ju.number_units - COALESCE(ju.taken_units,0) AS units_left 
+FROM join_units ju WHERE ju.number_units - ju.taken_units > 0 OR ju.number_units - ju.taken_units IS NULL), 
+neg_units AS (SELECT ju.category AS category, 0 AS units_left FROM join_units ju WHERE ju.number_units - ju.taken_units <= 0) 
+SELECT * FROM pos_units UNION SELECT * FROM neg_units;
 
 /* 1e */
 WITH units AS 
 (SELECT cr.name, SUM(e.units_taken) AS total_units_taken FROM enroll e, concentration_requirements cr 
 WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id GROUP BY cr.name), 
 gpa AS 
-(SELECT cr.name, AVG(gc.number_grade) AS concentration_gpa FROM enroll e, concentration_requirements cr, grade_conversion gc 
+(SELECT cr.name, SUM(gc.number_grade*e.units_taken)/SUM(e.units_taken) AS concentration_gpa FROM enroll e, concentration_requirements cr, grade_conversion gc 
 WHERE e.ssn = ? AND e.grade != 'IN' AND cr.degree_number = ? AND e.course_id = cr.course_id AND e.grade = gc.letter_grade 
 AND e.grade_option = 'letter' GROUP BY cr.name), 
 units_gpa AS 
@@ -87,143 +100,35 @@ WHERE s.course_id = mo.course_id AND s.class_title = mo.class_title AND s.quarte
 AND s.section_id = mo.section_id AND mo.day = em.day 
 AND ((mo.start_time > em.start_time AND mo.start_time < em.end_time) 
 OR (mo.end_time > em.start_time AND mo.end_time < em.end_time) 
-OR (mo.start_time < em.start_time AND mo.end_time > em.end_time) 
-OR (mo.start_time > em.start_time AND mo.end_time < em.end_time))));
+OR (mo.start_time <= em.start_time AND mo.end_time >= em.end_time) 
+OR (mo.start_time >= em.start_time AND mo.end_time <= em.end_time))));
 
 /* 2b */
-
-
--- DROP TABLE yourtable;
-
-CREATE TABLE YourTable (start_d timestamp, end_d timestamp);
-
-do $$
-DECLARE
-    -- need to get variable for difference between dates (that the instructor inputs)
-
-    start_date date := '2022-05-09'; -- input of start date from instructor
-    end_date date := '2022-05-13'; -- input of end date from instructor
-    start_time time := '08:00:00';
-    end_time time := '20:00:00';
-    first timestamp := cast(concat(start_date, ' ', start_time) as timestamp);
-    second timestamp := cast(concat(start_date, ' ', end_time) as timestamp);
-    diff_day integer := end_date - start_date;
-begin
-  for r in 0..diff_day loop
-    RAISE NOTICE 'iteration: %', r;
-    INSERT INTO YourTable (start_d, end_d)
-    VALUES (first, second);
-    first := first + INTERVAL '1 day';
-    second := second + INTERVAL '1 day';
-  end loop;
-end $$;
-
-
--- https://stackoverflow.com/questions/27489564/for-each-day-between-two-dates-add-a-row-with-the-same-info-but-only-that-day-i
-
-with RECURSIVE cte AS (SELECT TO_CHAR(start_d, 'MM-DD') AS month_day,
-                              CASE
-                                  WHEN extract(isodow from start_d) = 1 THEN 'm'
-                                  WHEN extract(isodow from start_d) = 2 THEN 't'
-                                  WHEN extract(isodow from start_d) = 3 THEN 'w'
-                                  WHEN extract(isodow from start_d) = 4 THEN 'r'
-                                  WHEN extract(isodow from start_d) = 5 THEN 'f'
-                                  WHEN extract(isodow from start_d) = 6 THEN 'sat'
-                                  WHEN extract(isodow from start_d) = 7 THEN 'sun'
-                            END AS day_of_week,
-                           start_d,
-                           end_d,
-                           start_d::time as start_t,
-                           end_d::time as end_t
-                       FROM YourTable
-                       UNION  ALL
-                       SELECT TO_CHAR(start_d, 'MM-DD') AS month_day,
-                              CASE
-                                  WHEN extract(isodow from start_d) = 1 THEN 'm'
-                                  WHEN extract(isodow from start_d) = 2 THEN 't'
-                                  WHEN extract(isodow from start_d) = 3 THEN 'w'
-                                  WHEN extract(isodow from start_d) = 4 THEN 'r'
-                                  WHEN extract(isodow from start_d) = 5 THEN 'f'
-                                  WHEN extract(isodow from start_d) = 6 THEN 'sat'
-                                  WHEN extract(isodow from start_d) = 7 THEN 'sun'
-                            END AS day_of_week,
-                              start_d + INTERVAL '1 hour',
-                              end_d,
-                              (start_d + INTERVAL '1 hour')::time as start_t,
-                              end_d::time as end_t
-                       FROM cte
-                       WHERE start_d < end_d - INTERVAL '1 hour'),
-
-    student_in_section AS (
-        select e.ssn, e.course_id, e.class_title, e.section_id from enroll e
-                 where e.class_title = 'CSE998-1' -- need to input the class
-                 and e.section_id = 'S998-1' -- need to input the section
-    ),
-
-    all_student_section AS (
-        select e.* from enroll e, student_in_section sis
-                 where e.ssn = sis.ssn
-                 and e.quarter = 'SP'
-                 and e.year = 2022
-    ),
-
-    all_student_section_time AS (
-        select distinct m.class_title, m.section_id, m.day, m.start_time::time, m.end_time::time, m.type
-        from all_student_section all_ss, meeting m
-                 where all_ss.class_title = m.class_title
-                 and all_ss.section_id = m.section_id
-    ),
-
-    filtered_cte as (
-        SELECT month_day, day_of_week, start_d, start_d + INTERVAL '1 hour' AS end_d,
-               start_d::time as start_t, (start_d + INTERVAL '1 hour')::time as end_t
-        FROM cte
-        ORDER BY start_d
-    )
-
-SELECT fc.month_day, fc.day_of_week, fc.start_t, fc.end_t FROM filtered_cte fc
-             WHERE NOT EXISTS (
-                 SELECT * from all_student_section_time all_sst
-                 WHERE
-                 fc.day_of_week = all_sst.day AND
-                 (
-                     (all_sst.start_time < fc.start_t AND fc.start_t < all_sst.end_time) -- student_time before or at option start and end before option end
-                     OR (all_sst.start_time < fc.end_t AND fc.end_t < all_sst.end_time) --
-                     OR (fc.start_t < all_sst.start_time AND all_sst.end_time < fc.end_t) -- student_time is entirely between option
-                     OR (all_sst.start_time <= fc.start_t AND fc.end_t <= all_sst.end_time) -- option is entirely between student_time
-                 )
-            )
-ORDER BY start_d;
-
-
-
-
-
-
-
-
-
-
-
-
+WITH students_in_section AS 
+(SELECT e.ssn FROM enroll e WHERE e.class_title = ? AND e.section_id = ?), 
+sections_of_students AS 
+(SELECT e.class_title, e.section_id FROM enroll e, students_in_section sis 
+WHERE e.ssn = e.ssn AND e.quarter = 'SP' AND e.year = 2022), 
+meetings_of_students AS 
+(SELECT m.day, m.start_time, m.end_time FROM sections_of_students sis, meeting m 
+WHERE sis.class_title = m.class_title AND sis.section_id = m.section_id) 
+SELECT so.date, so.day, so.start_time, so.end_time FROM session_options so 
+WHERE NOT EXISTS 
+(SELECT * FROM meetings_of_students mos 
+WHERE so.day = mos.day 
+AND ((so.start_time > mos.start_time AND so.start_time < mos.end_time) 
+OR (so.end_time > mos.start_time AND so.end_time < mos.end_time) 
 
 /* 3a */
 WITH profSections AS 
-(SELECT s.section_id FROM section s 
-WHERE s.quarter = ? AND s.year = ? AND s.instructor_id = ? AND s.course_id = ?), 
+(SELECT s.section_id FROM section s WHERE s.quarter = ? AND s.year = ? AND s.instructor_id = ? AND s.course_id = ?), 
 studentGrades AS 
-(SELECT e.grade FROM enroll e 
-WHERE e.quarter = ? AND e.year = ? AND e.course_id = ? AND e.section_id IN (SELECT * FROM profSections)) 
-SELECT 'A' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'A'
-UNION
-SELECT 'B' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'B'
-UNION 
-SELECT 'C' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'C' 
-UNION 
-SELECT 'D' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'D' 
-UNION 
-SELECT 'other' AS grade, COUNT(*) AS count FROM studentGrades sg 
-WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D';
+(SELECT e.grade FROM enroll e WHERE e.quarter = ? AND e.year = ? AND e.course_id = ? AND e.section_id IN (SELECT * FROM profSections)) 
+(SELECT 'A' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'A') UNION 
+(SELECT 'B' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'B') UNION 
+SELECT 'C' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'C' UNION 
+SELECT 'D' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade = 'D' UNION 
+SELECT 'other' AS grade, COUNT(*) AS count FROM studentGrades sg WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D';
 
 WITH profSections AS 
 (SELECT s.section_id, s.quarter, s.year FROM section s 
@@ -263,7 +168,7 @@ WHERE sg.grade != 'A' AND sg.grade != 'B' AND sg.grade != 'C' AND sg.grade != 'D
 WITH profSections AS 
 (SELECT s.section_id, s.quarter, s.year FROM section s 
 WHERE s.instructor_id = ? AND s.course_id = ?)
-SELECT AVG(gc.number_grade) AS gpa FROM enroll e, grade_conversion gc
+SELECT SUM(gc.number_grade * e.units_taken)/SUM(e.units_taken) AS gpa FROM enroll e, grade_conversion gc
 WHERE EXISTS 
 (SELECT * FROM profSections ps 
 WHERE e.course_id = ? AND ps.section_id = e.section_id AND ps.quarter = e.quarter AND ps.year = e.year)
@@ -408,61 +313,61 @@ INSERT INTO section VALUES (10, 'CSE008-3', 'FA', 2015, 'A00', 3, 100);
 INSERT INTO courses VALUES (11, 2, '132A', NULL, 'letter', '1,2,3,4');
 INSERT INTO classes VALUES (11, 'MATH132A-1', 'SP', 2022);
 INSERT INTO section VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 1, 100);
-INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'M', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'W', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'F', '13:00', '13:50', 'room1', 'discussion', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'M', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'W', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-1', 'SP', 2022, 'A00', 'F', '13:00', '13:50', 'room11', 'discussion', 'n');
 INSERT INTO classes VALUES (11, 'MATH132A-2', 'FA', 2017);
 INSERT INTO section VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 1, 100);
-INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'M', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'W', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'F', '13:00', '13:50', 'room1', 'discussion', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'M', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'W', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-2', 'FA', 2017, 'A00', 'F', '13:00', '13:50', 'room11', 'discussion', 'n');
 INSERT INTO classes VALUES (11, 'MATH132A-3', 'FA', 2015);
 INSERT INTO section VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 1, 100);
-INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'M', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'W', '13:00', '15:00', 'room1', 'lecture', 'n');
-INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'F', '13:00', '13:50', 'room1', 'discussion', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'M', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'W', '13:00', '15:00', 'room11', 'lecture', 'n');
+INSERT INTO meeting VALUES (11, 'MATH132A-3', 'FA', 2015, 'A00', 'F', '13:00', '13:50', 'room11', 'discussion', 'n');
 INSERT INTO courses VALUES (12, 2, '150A', NULL, 'letter', '1,2,3,4');
 INSERT INTO classes VALUES (12, 'MATH150A-1', 'SP', 2022);
 INSERT INTO section VALUES (12, 'MATH150A-1', 'SP', 2022, 'A00', 2, 100);
-INSERT INTO meeting VALUES (12, 'MATH150A-1', 'SP', 2022, 'A00', 'M', '14:00', '16:00', 'room2', 'lecture', 'n');
-INSERT INTO meeting VALUES (12, 'MATH150A-1', 'SP', 2022, 'A00', 'W', '14:00', '16:00', 'room2', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-1', 'SP', 2022, 'A00', 'M', '14:00', '16:00', 'room12', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-1', 'SP', 2022, 'A00', 'W', '14:00', '16:00', 'room12', 'lecture', 'n');
 INSERT INTO classes VALUES (12, 'MATH150A-2', 'FA', 2017);
 INSERT INTO section VALUES (12, 'MATH150A-2', 'FA', 2017, 'A00', 2, 100);
-INSERT INTO meeting VALUES (12, 'MATH150A-2', 'FA', 2017, 'A00', 'M', '14:00', '16:00', 'room2', 'lecture', 'n');
-INSERT INTO meeting VALUES (12, 'MATH150A-2', 'FA', 2017, 'A00', 'W', '14:00', '16:00', 'room2', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-2', 'FA', 2017, 'A00', 'M', '14:00', '16:00', 'room12', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-2', 'FA', 2017, 'A00', 'W', '14:00', '16:00', 'room12', 'lecture', 'n');
 INSERT INTO classes VALUES (12, 'MATH150A-3', 'FA', 2015);
 INSERT INTO section VALUES (12, 'MATH150A-3', 'FA', 2015, 'A00', 2, 100);
-INSERT INTO meeting VALUES (12, 'MATH150A-3', 'FA', 2015, 'A00', 'M', '14:00', '16:00', 'room2', 'lecture', 'n');
-INSERT INTO meeting VALUES (12, 'MATH150A-3', 'FA', 2015, 'A00', 'W', '14:00', '16:00', 'room2', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-3', 'FA', 2015, 'A00', 'M', '14:00', '16:00', 'room12', 'lecture', 'n');
+INSERT INTO meeting VALUES (12, 'MATH150A-3', 'FA', 2015, 'A00', 'W', '14:00', '16:00', 'room12', 'lecture', 'n');
 INSERT INTO courses VALUES (13, 2, '124A', NULL, 'letter', '1,2,3,4');
 INSERT INTO classes VALUES (13, 'MATH124A-1', 'SP', 2022);
 INSERT INTO section VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 2, 100);
-INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'T', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'R', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'M', '12:00', '12:50', 'room3', 'discussion', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'T', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'R', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-1', 'SP', 2022, 'A00', 'M', '12:00', '12:50', 'room13', 'discussion', 'n');
 INSERT INTO classes VALUES (13, 'MATH124A-2', 'FA', 2017);
 INSERT INTO section VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 2, 100);
-INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'T', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'R', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'M', '12:00', '12:50', 'room3', 'discussion', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'T', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'R', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-2', 'FA', 2017, 'A00', 'M', '12:00', '12:50', 'room13', 'discussion', 'n');
 INSERT INTO classes VALUES (13, 'MATH124A-3', 'FA', 2015);
 INSERT INTO section VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 2, 100);
-INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'T', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'R', '20:00', '21:20', 'room3', 'lecture', 'n');
-INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'M', '12:00', '12:50', 'room3', 'discussion', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'T', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'R', '20:00', '21:20', 'room13', 'lecture', 'n');
+INSERT INTO meeting VALUES (13, 'MATH124A-3', 'FA', 2015, 'A00', 'M', '12:00', '12:50', 'room13', 'discussion', 'n');
 INSERT INTO courses VALUES (14, 2, '132B', NULL, 'both', '1,2,3,4');
 INSERT INTO classes VALUES (14, 'MATH132B-1', 'SP', 2022);
 INSERT INTO section VALUES (14, 'MATH132B-1', 'SP', 2022, 'A00', 1, 100);
-INSERT INTO meeting VALUES (14, 'MATH132B-1', 'SP', 2022, 'A00', 'T', '15:00', '17:00', 'room4', 'lecture', 'n');
-INSERT INTO meeting VALUES (14, 'MATH132B-1', 'SP', 2022, 'A00', 'R', '15:00', '17:00', 'room4', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-1', 'SP', 2022, 'A00', 'T', '15:00', '17:00', 'room14', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-1', 'SP', 2022, 'A00', 'R', '15:00', '17:00', 'room14', 'lecture', 'n');
 INSERT INTO classes VALUES (14, 'MATH132B-2', 'FA', 2017);
 INSERT INTO section VALUES (14, 'MATH132B-2', 'FA', 2017, 'A00', 1, 100);
-INSERT INTO meeting VALUES (14, 'MATH132B-2', 'FA', 2017, 'A00', 'T', '15:00', '17:00', 'room4', 'lecture', 'n');
-INSERT INTO meeting VALUES (14, 'MATH132B-2', 'FA', 2017, 'A00', 'R', '15:00', '17:00', 'room4', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-2', 'FA', 2017, 'A00', 'T', '15:00', '17:00', 'room14', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-2', 'FA', 2017, 'A00', 'R', '15:00', '17:00', 'room14', 'lecture', 'n');
 INSERT INTO classes VALUES (14, 'MATH132B-3', 'FA', 2015);
 INSERT INTO section VALUES (14, 'MATH132B-3', 'FA', 2015, 'A00', 1, 100);
-INSERT INTO meeting VALUES (14, 'MATH132B-3', 'FA', 2015, 'A00', 'T', '15:00', '17:00', 'room4', 'lecture', 'n');
-INSERT INTO meeting VALUES (14, 'MATH132B-3', 'FA', 2015, 'A00', 'R', '15:00', '17:00', 'room4', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-3', 'FA', 2015, 'A00', 'T', '15:00', '17:00', 'room14', 'lecture', 'n');
+INSERT INTO meeting VALUES (14, 'MATH132B-3', 'FA', 2015, 'A00', 'R', '15:00', '17:00', 'room14', 'lecture', 'n');
 INSERT INTO courses VALUES (15, 2, '132C', NULL, 'both', '1,2,3,4');
 INSERT INTO classes VALUES (15, 'MATH132C-1', 'SP', 2022);
 INSERT INTO section VALUES (15, 'MATH132C-1', 'SP', 2022, 'A00', 1, 100);
@@ -473,19 +378,19 @@ INSERT INTO section VALUES (15, 'MATH132C-3', 'FA', 2015, 'A00', 1, 100);
 INSERT INTO courses VALUES (16, 2, '130', NULL, 'letter', '1,2,3,4');
 INSERT INTO classes VALUES (16, 'MATH130-1', 'SP', 2022);
 INSERT INTO section VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 1, 100);
-INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'T', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'R', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'F', '09:00', '10:00', 'room5', 'discussion', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'T', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'R', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-1', 'SP', 2022, 'A00', 'F', '09:00', '10:00', 'room15', 'discussion', 'n');
 INSERT INTO classes VALUES (16, 'MATH130-2', 'FA', 2017);
 INSERT INTO section VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 1, 100);
-INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'T', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'R', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'F', '09:00', '10:00', 'room5', 'discussion', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'T', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'R', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-2', 'FA', 2017, 'A00', 'F', '09:00', '10:00', 'room15', 'discussion', 'n');
 INSERT INTO classes VALUES (16, 'MATH130-3', 'FA', 2015);
 INSERT INTO section VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 1, 100);
-INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'T', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'R', '10:00', '13:00', 'room5', 'lecture', 'n');
-INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'F', '09:00', '10:00', 'room5', 'discussion', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'T', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'R', '10:00', '13:00', 'room15', 'lecture', 'n');
+INSERT INTO meeting VALUES (16, 'MATH130-3', 'FA', 2015, 'A00', 'F', '09:00', '10:00', 'room15', 'discussion', 'n');
 INSERT INTO courses VALUES (17, 2, '005', NULL, 'letter', '1,2,3,4');
 INSERT INTO classes VALUES (17, 'MATH005-1', 'SP', 2022);
 INSERT INTO section VALUES (17, 'MATH005-1', 'SP', 2022, 'A00', 3, 100);
@@ -634,22 +539,3 @@ INSERT INTO category_requirements VALUES ('technical electives', 2, 17);
 INSERT INTO category_requirements VALUES ('technical electives', 2, 18);
 INSERT INTO category_requirements VALUES ('technical electives', 2, 19);
 INSERT INTO category_requirements VALUES ('technical electives', 2, 20);
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
