@@ -91,8 +91,8 @@
 						int year = Integer.parseInt(request.getParameter("YEAR"));
 						
 						PreparedStatement countStmt1 = conn.prepareStatement("SELECT * FROM CPQG c WHERE c.course_id = ? AND c.instructor_id = ? AND c.quarter = ? AND c.year = ? ORDER BY grade;");
-						countStmt1.setInt(1, faculty);
-						countStmt1.setInt(2, course);
+						countStmt1.setInt(1, course);
+						countStmt1.setInt(2, faculty);
 						countStmt1.setString(3, quarter);
 						countStmt1.setInt(4, year);
 
