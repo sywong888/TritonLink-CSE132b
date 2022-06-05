@@ -117,6 +117,31 @@
 						}
 						%></table><%
 						countRset1.close();
+						
+						PreparedStatement countStmt2 = conn.prepareStatement("SELECT * FROM CPG c WHERE c.course_id = ? AND c.instructor_id = ? ORDER BY grade;");
+						countStmt2.setInt(1, course);
+						countStmt2.setInt(2, faculty);
+						ResultSet countRset2 = countStmt2.executeQuery();
+						
+						%>
+						<h4>Produce the count of grades that professor Y has given for course X over the years:</h4>
+						<table>
+							<tr>
+								<th>Grade</th>
+								<th>Count</th>
+							</tr>
+						<%
+						
+						while (countRset2.next()) {
+							%>
+								<tr>
+									<td><%= countRset2.getString("grade") %></td>
+									<td><%= countRset2.getString("count") %></td>
+								</tr>
+							<%
+						}
+						%></table><%
+						countRset2.close();
 					}
 					%>
 				
