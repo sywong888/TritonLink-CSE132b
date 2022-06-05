@@ -29,6 +29,28 @@ CREATE OR REPLACE FUNCTION add_meeting()
 
 insert into meeting values(14, 'MATH132B-1', 'SP', 2022, 'A00', 'T', '15:00', '16:00', 'room15', 'discussion', 'n');
 
+/** Trigger 2 **/
+CREATE OR REPLACE FUNCTION add_enrollment() RETURNS TRIGGER LANGUAGE PLPGSQL AS
+    $$
+        BEGIN
+--             CREATE OR REPLACE VIEW enrollment_section_limit AS SELECT count(*) AS e_limit from enroll e, section s where e.section_id = s.section_id and e.class_title = s.class_title and e.quarter = s.quarter
+--                                                                                                     and e.section_id = NEW.section_id and e.class_title = NEW.class_title and e.quarter = NEW.quarter;
+            CREATE OR REPLACE VIEW enrollment_section AS SELECT e.class_title, e.section_id, e.quarter, s.enrollment_limit, count(*) AS e_count from enroll e, section s where e.section_id = s.section_id and e.class_title = s.class_title and e.quarter = s.quarter
+                                                                                                    and e.section_id = NEW.section_id and e.class_title = NEW.class_title and e.quarter = NEW.quarter
+                                                                                                    group by e.class_title, e.section_id, e.quarter, s.enrollment_limit;
+            IF (enrollment_section.e_count <= enrollment_section.enrollment_limit)
+                THEN RETURN NEW;
+            ELSE
+                RAISE EXCEPTION 'Enrollment limit of the section has been reached. Cannot enroll.';
+                END IF;
+        END;
+    $$;
+
+CREATE TRIGGER ENROLLMENT_LIMIT_CONFLICT
+    BEFORE INSERT ON enroll
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_enrollment();
+
 /** Trigger 3 **/ 
 CREATE TRIGGER PROF_CONFLICT
 BEFORE INSERT ON MEETING
