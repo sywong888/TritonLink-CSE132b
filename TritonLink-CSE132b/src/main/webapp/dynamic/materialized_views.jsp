@@ -24,8 +24,8 @@
 				
 				/* Reports III a */
 				%>
-				<h2>Redesigned Decision Support Queries</h2>
-				<h3>Report III</h3>
+				<h2>Milestone 5</h2>
+				<h3>Redesigned Design Support Queries for Report III</h3>
 				<%
 				
 				// HTML select for courses, professors, quarters, years
@@ -60,7 +60,7 @@
 					<%--Report III a--%>
 					<tr>
 						<form action="materialized_views.jsp" method="get">
-							<input type="hidden" value="select-report-III-a" name="action">							
+							<input type="hidden" value="mv-counts" name="action">							
 							<th><select name="COURSE_ID">
 								<%  for(String course: courses) { %>
   									 <option value="<%=course%>"><%=course%></option>
@@ -83,7 +83,7 @@
 				</table>
 				
 					<% 
-					if (action != null && action.equals("select-report-III-a")) {
+					if (action != null && action.equals("mv-counts")) {
 						conn.setAutoCommit(false);
 						int course = Integer.parseInt(request.getParameter("COURSE_ID"));
 						int faculty = Integer.parseInt(request.getParameter("FACULTY_ID"));
@@ -143,7 +143,63 @@
 						%></table><%
 						countRset2.close();
 					}
-					%>
+				%>
+				<h3>Insert into enroll to update CPQG and CPG</h3>
+				<table>
+					<tr>
+						<th>SSN</th>
+						<th>Class Title</th>
+						<th>Section ID</th>
+						<th>Grade</th>
+					</tr>
+					
+					<tr>
+						<form action="materialized_views.jsp" method="get">
+							<input type="hidden" value="mv-insert" name="action">
+							<th><input value="" name="SSN" size="10"></th>
+							<th><input value="" name="CLASS_TITLE" size="10"></th>
+							<th><input value="" name="SECTION_ID" size="10"></th>
+							<th><input value="" name="GRADE" size="10"></th>
+							<th><input type="submit" value="Insert"></th>
+						</form>
+					</tr>
+				</table>
+				
+				<% 
+					if (action != null && action.equals("mv-insert")) {
+						conn.setAutoCommit(false);
+						String ssn = request.getParameter("SSN");
+						String classTitle = request.getParameter("CLASS_TITLE");
+						String section = request.getParameter("SECTION_ID");
+						String grade = request.getParameter("GRADE");
+						
+						PreparedStatement findValues = conn.prepareStatement("SELECT s.course_id, s.quarter, s.year FROM section s WHERE s.class_title = ? AND s.section_id = ?");
+						findValues.setString(1, classTitle);
+						findValues.setString(2, section);
+						ResultSet findValuesRset = findValues.executeQuery();
+						findValuesRset.next();
+						
+						int course = Integer.parseInt(findValuesRset.getString("course_id"));
+						String quarter = findValuesRset.getString("quarter");
+						int year = Integer.parseInt(findValuesRset.getString("year"));
+						
+ 						PreparedStatement insertEnroll = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, ?, ?, ?, NULL, 'letter', 'enroll', ?)");
+						insertEnroll.setString(1, ssn);
+						insertEnroll.setInt(2, course);
+						insertEnroll.setString(3, classTitle);
+						insertEnroll.setString(4, quarter);
+						insertEnroll.setInt(5, year);
+						insertEnroll.setString(6, section);
+						insertEnroll.setString(7, grade);
+						insertEnroll.executeUpdate(); 
+
+						findValuesRset.close();
+						
+						conn.commit();
+						conn.setAutoCommit(true);
+					}
+				%>
+
 				
 			</td>
 		</tr>	

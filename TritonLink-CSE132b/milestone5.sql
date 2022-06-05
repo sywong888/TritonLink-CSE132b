@@ -128,3 +128,30 @@ SELECT *
 FROM CPG c
 WHERE c.course_id = ? AND c.instructor_id = ?
 ORDER BY grade;
+
+CREATE TRIGGER mv_enroll
+BEFORE INSERT ON enroll
+FOR EACH ROW
+EXECUTE PROCEDURE add_enrollment();
+
+CREATE OR REPLACE FUNCTION add_enrollment()
+  RETURNS TRIGGER 
+  LANGUAGE PLPGSQL
+  AS
+  $$
+  declare prof integer;
+  BEGIN
+	SELECT s.instructor_id into prof FROM section s WHERE s.course_id = new.course_id AND s.class_title = new.class_title AND s.section_id = new.section_id AND s.quarter = new.quarter AND s.year = new.year;
+	IF new.grade != 'A' AND new.grade != 'B' AND new.grade != 'C' AND new.grade != 'D'
+	THEN
+		UPDATE CPQG SET count = count + 1 WHERE instructor_id = prof AND course_id = new.course_id AND quarter = new.quarter AND year = new.year AND grade = 'other';
+		UPDATE CPG SET count = count + 1 WHERE instructor_id = prof AND course_id = new.course_id AND grade = 'other';
+	ELSE 
+		UPDATE CPQG SET count = count + 1 WHERE instructor_id = prof AND course_id = new.course_id AND quarter = new.quarter AND year = new.year AND grade = new.grade;
+		UPDATE CPG SET count = count + 1 WHERE instructor_id = prof AND course_id = new.course_id AND grade = new.grade;
+	END IF;
+    RETURN NEW;
+  END;
+  $$;
+  
+insert into enroll VALUES ('222222222', 10, 'CSE008-2', 'FA', 2017, 'A00', NULL, 'letter', 'enroll', 'A');
