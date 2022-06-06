@@ -8,6 +8,7 @@
 <body>
 	<%@ page language="java" import="java.sql.*" %>
 	<%@ page import="java.util.*" %>
+	<%@ page language="java" import="javax.swing.*" %>
 	
 	<table>
 		<tr>
@@ -32,43 +33,49 @@
 						3. Split the possible units (comma separated) into a list
 						4. Check if student is enrolling with the proper grading option and # of units
 					*/
-					
-					int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
-					PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
-					pstmt.setInt(1, course_id);
-					ResultSet courseInfo = pstmt.executeQuery();
-					courseInfo.next();
-					
-					// user specific information
-					String unitsTaken = request.getParameter("UNITS_TAKEN");
-					String gradeMethodSelected = String.valueOf(request.getParameter("GRADING_METHOD"));
-					
-					// course specfic information
-					String possibleUnits = courseInfo.getString("possible_units");
-					String gradeMethod = courseInfo.getString("grading_method");
-					
-					// put unit options into list					
-					List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
+					try {
+						int course_id = Integer.parseInt(request.getParameter("COURSE_ID"));
+						PreparedStatement pstmt = conn.prepareStatement("SELECT co.possible_units, co.grading_method FROM classes cl, courses co WHERE cl.course_id = co.course_id AND co.course_id = ?;");
+						pstmt.setInt(1, course_id);
+						ResultSet courseInfo = pstmt.executeQuery();
+						courseInfo.next();
 						
-					// Check if the user inputted values are valid
-					if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
-						pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'SP', 2022, ?, ?, ?, ?, 'IN')");
+						// user specific information
+						String unitsTaken = request.getParameter("UNITS_TAKEN");
+						String gradeMethodSelected = String.valueOf(request.getParameter("GRADING_METHOD"));
 						
-						pstmt.setString(1, request.getParameter("SSN"));
-						pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
-						pstmt.setString(3, request.getParameter("CLASS_TITLE"));
-						pstmt.setString(4, request.getParameter("SECTION_ID"));
-						pstmt.setInt(5, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
-						pstmt.setString(6, request.getParameter("GRADING_METHOD"));
-						pstmt.setString(7, request.getParameter("STATUS"));
+						// course specfic information
+						String possibleUnits = courseInfo.getString("possible_units");
+						String gradeMethod = courseInfo.getString("grading_method");
+						
+						// put unit options into list					
+						List<String> listOfUnits = new ArrayList<String>(Arrays.asList(possibleUnits.split(",")));
 							
-						pstmt.executeUpdate();
+						// Check if the user inputted values are valid
+						if (listOfUnits.contains(unitsTaken) && (gradeMethod.contains(gradeMethodSelected) || gradeMethod.equals("both"))) {
+							pstmt = conn.prepareStatement("INSERT INTO enroll VALUES (?, ?, ?, 'SP', 2022, ?, ?, ?, ?, 'IN')");
 							
+							pstmt.setString(1, request.getParameter("SSN"));
+							pstmt.setInt(2, Integer.parseInt(request.getParameter("COURSE_ID")));
+							pstmt.setString(3, request.getParameter("CLASS_TITLE"));
+							pstmt.setString(4, request.getParameter("SECTION_ID"));
+							pstmt.setInt(5, Integer.parseInt(request.getParameter("UNITS_TAKEN")));
+							pstmt.setString(6, request.getParameter("GRADING_METHOD"));
+							pstmt.setString(7, request.getParameter("STATUS"));
+								
+							pstmt.executeUpdate();
+							
+						} else {
+							System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
+						}
+					} catch (SQLException e) {
+						JFrame jFrame = new JFrame();
+				        JOptionPane.showMessageDialog(jFrame, e.getMessage());
+					} finally {
 						conn.commit();
 						conn.setAutoCommit(true);
-					} else {
-						System.out.println("ERROR: make sure you are enrolling with the allowed number of units and grading option");
 					}
+					
 				}
 				
 				// update enroll
